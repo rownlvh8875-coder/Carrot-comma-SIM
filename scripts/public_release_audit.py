@@ -30,20 +30,21 @@ FORBIDDEN_FILE_SUFFIXES = {
     ".key",
 }
 
+# Build the signatures in pieces so the audit source does not match itself.
 FORBIDDEN_LITERAL_PATTERNS = (
-    "BEGIN OPENSSH PRIVATE KEY",
-    "BEGIN RSA PRIVATE KEY",
-    "BEGIN EC PRIVATE KEY",
-    "ssh-ed25519 ",
-    "ssh-rsa ",
-    "github_pat_",
-    "ghp_",
-    "gho_",
-    "ghu_",
-    "ghs_",
-    "sk-proj-",
-    "/home/",
-    "C:\\Users\\",
+    "BEGIN " + "OPENSSH PRIVATE KEY",
+    "BEGIN " + "RSA PRIVATE KEY",
+    "BEGIN " + "EC PRIVATE KEY",
+    "ssh-" + "ed25519 ",
+    "ssh-" + "rsa ",
+    "github" + "_pat_",
+    "gh" + "p_",
+    "gh" + "o_",
+    "gh" + "u_",
+    "gh" + "s_",
+    "sk-" + "proj-",
+    "/" + "home" + "/",
+    "C:" + "\\Users\\",
 )
 
 PRIVATE_IPV4 = re.compile(
@@ -70,7 +71,7 @@ def scan(root: Path) -> list[str]:
             errors.append(f"forbidden public file type: {rel}")
             continue
 
-        if suffix not in TEXT_SUFFIXES and path.name not in {".gitignore"}:
+        if suffix not in TEXT_SUFFIXES and path.name != ".gitignore":
             continue
 
         try:
@@ -79,14 +80,7 @@ def scan(root: Path) -> list[str]:
             errors.append(f"non-UTF8 file requires manual public audit: {rel}")
             continue
 
-        # .gitignore names private artifacts intentionally, so only scan it for secrets/IPs.
-        patterns = FORBIDDEN_LITERAL_PATTERNS
-        if path.name == ".gitignore":
-            patterns = tuple(
-                p for p in patterns if p not in {"/home/", "C:\\Users\\"}
-            )
-
-        for pattern in patterns:
+        for pattern in FORBIDDEN_LITERAL_PATTERNS:
             if pattern in text:
                 errors.append(f"forbidden literal {pattern!r} in {rel}")
 
