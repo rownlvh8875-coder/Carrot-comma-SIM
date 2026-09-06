@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "carrot-comma-sim"
+version = "0.1.0"
+description = "Fail-closed multi-vehicle closed-loop simulator research core for Carrot/openpilot-family controllers"
+readme = "README_EN.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["carrot_sim*"]

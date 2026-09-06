@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Never publish real driving evidence from this repository.
+*.rlog
+*.qlog
+*.zst
+*.hevc
+*.mp4
+*.mov
+realdata/
+logs/
+private_evidence/
+secrets/
+.env
+.env.*
