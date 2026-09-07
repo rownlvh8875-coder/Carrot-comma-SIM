@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 import math
 from typing import Any
 
+from .observation_snapshot import freeze_metadata
+
 
 CONTRACT_VERSION = "3-carrot-sim-public-multivehicle-world-plant"
 
@@ -106,6 +108,7 @@ class TrafficActorState:
             raise ValueError("length_m must be > 0 when provided")
         if width is not None and width <= 0.0:
             raise ValueError("width_m must be > 0 when provided")
+        object.__setattr__(self, "metadata", freeze_metadata(self.metadata))
 
 
 @dataclass(frozen=True)
@@ -133,6 +136,8 @@ class WorldObservation:
         actor_ids = [actor.actor_id for actor in self.traffic_actors]
         if len(actor_ids) != len(set(actor_ids)):
             raise ValueError("traffic_actors actor_id values must be unique")
+        object.__setattr__(self, "traffic_actors", tuple(self.traffic_actors))
+        object.__setattr__(self, "metadata", freeze_metadata(self.metadata))
 
 
 @dataclass(frozen=True)
@@ -242,6 +247,19 @@ class PlantMetadata:
 
 class VehiclePlant(ABC):
     """Evidence-bound ego-vehicle response backend."""
+
+    @property
+    def supports_state_assimilation(self) -> bool:
+        return False
+
+    def assimilate_state(self, state_before: VehicleState, state_after: VehicleState,
+                                              control: PlantControl, world: WorldObservation) -> None:
+        """Consume a forced interval while preserving delay/filter history.
+
+        Implementations must opt in explicitly. Reset is not assimilation.
+        Unsupported plants fail before the teacher-force callback is called.
+        """
+        raise RuntimeError("plant does not support history-preserving state assimilation")
 
     @property
     @abstractmethod
