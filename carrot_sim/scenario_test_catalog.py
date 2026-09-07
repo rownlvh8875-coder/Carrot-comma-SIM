@@ -137,19 +137,26 @@ def prioritize_test_cases(
     budget = min(budget, len(rows))
     selected: list[PrioritizedScenario] = []
     covered: set[str] = set()
-    remaining = {row.case_id: row for row in rows}
+    remaining = {
+        row.case_id: (row, policy.base_score(row.priority), frozenset(row.coverage_tags))
+        for row in rows
+    }
+    # Preserve stable-sort behavior for overflowed weights producing NaN scores.
+    nonfinite_base = any(not math.isfinite(base) for _, base, _ in remaining.values())
+
+    def candidates():
+        for case, base, tags in remaining.values():
+            novelty = (len(tags - covered) / len(tags)) if tags else 0.0
+            score = base + policy.novelty_bonus_weight * novelty
+            yield score, base, novelty, case.case_id, case
+
+    def rank_key(row):
+        return -row[0], -row[1], -row[2], row[3]
 
     while remaining and len(selected) < budget:
-        ranked: list[tuple[float, float, float, str, ScenarioTestCase]] = []
-        for case in remaining.values():
-            tags = set(case.coverage_tags)
-            novelty = (len(tags - covered) / len(tags)) if tags else 0.0
-            base = policy.base_score(case.priority)
-            score = base + policy.novelty_bonus_weight * novelty
-            ranked.append((score, base, novelty, case.case_id, case))
-
-        ranked.sort(key=lambda row: (-row[0], -row[1], -row[2], row[3]))
-        score, base, novelty, _, case = ranked[0]
+        # High score/base/novelty first; lexical case_id breaks ties.
+        best = sorted(candidates(), key=rank_key)[0] if nonfinite_base else min(candidates(), key=rank_key)
+        score, base, novelty, _, case = best
         selected.append(PrioritizedScenario(case, base, novelty, score))
         covered.update(case.coverage_tags)
         del remaining[case.case_id]
