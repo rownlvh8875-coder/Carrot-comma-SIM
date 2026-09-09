@@ -12,7 +12,6 @@ from carrot_sim.h1_evidence import H1EvidenceError
 
 
 RADAR_SHA = "55" * 32
-SNAPSHOT_SHA = "66" * 32
 SERVICES = (
   "modelV2", "liveTracks", "carControl", "carState", "controlsState",
   "liveParameters", "radarState", "selfdriveState", "carrotMan",
@@ -42,6 +41,44 @@ def valid_config_dict():
   }
 
 
+def historical_snapshot_digest(row):
+  payload = {
+    "processEpoch": row["processEpoch"],
+    "loopSequence": row["loopSequence"],
+    "plannerCycle": row["plannerCycle"],
+    "subMasterFrame": row["subMasterFrame"],
+    "captureMonoTimeNs": row["captureMonoTimeNs"],
+    "decisionMonoTimeNs": row["decisionMonoTimeNs"],
+    "logMonoTimes": tuple(row[f"{service}LogMonoTime"] for service in SERVICES),
+    "recvFrames": tuple(row[f"{service}RecvFrame"] for service in SERVICES),
+    "recvTimesNs": tuple(row[f"{service}RecvTimeNs"] for service in SERVICES),
+    "seenMask": row["seenMask"],
+    "updatedMask": row["updatedMask"],
+    "aliveMask": row["aliveMask"],
+    "freqOkMask": row["freqOkMask"],
+    "validMask": row["validMask"],
+    "planningTriggerKind": row["planningTriggerKind"],
+    "planningTriggerLogMonoTime": row["planningTriggerLogMonoTime"],
+    "runLongitudinal": row["runLongitudinal"],
+    "longitudinalPlanEmitted": row["longitudinalPlanEmitted"],
+    "liveTracksRecent": row["liveTracksRecent"],
+    "useLiveTracksTrigger": row["useLiveTracksTrigger"],
+    "triggerIntervalOk": row["triggerIntervalOk"],
+    "configSequence": row["configSequence"],
+    "configSha256": row["configSha256"],
+    "radarInputKind": row["radarInputKind"],
+    "effectiveRadarStateSha256": row["effectiveRadarStateSha256"],
+  }
+  raw = json.dumps(
+    payload,
+    sort_keys=True,
+    separators=(",", ":"),
+    ensure_ascii=False,
+    allow_nan=False,
+  ).encode("utf-8")
+  return hashlib.sha256(raw).hexdigest()
+
+
 def valid_trace_dict():
   config_sha = valid_config_dict()["configSha256"]
   row = {
@@ -50,7 +87,7 @@ def valid_trace_dict():
     "plannerCycle": 1,
     "subMasterFrame": 10,
     "planningTriggerKind": 0,
-    "planningTriggerLogMonoTime": 123456,
+    "planningTriggerLogMonoTime": 1000,
     "configSequence": 1,
     "configSha256": config_sha,
     "updatedMask": 0x1FF,
@@ -71,12 +108,12 @@ def valid_trace_dict():
     "liveTracksRecent": True,
     "useLiveTracksTrigger": False,
     "triggerIntervalOk": True,
-    "consumedSnapshotIdentitySha256": SNAPSHOT_SHA,
   }
   for index, service in enumerate(SERVICES):
     row[f"{service}LogMonoTime"] = 1000 + index
     row[f"{service}RecvFrame"] = 2000 + index
     row[f"{service}RecvTimeNs"] = 3000 + index
+  row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
   return row
 
 
@@ -152,6 +189,15 @@ class TestH1Jsonl(unittest.TestCase):
     td, path = self._write([json.dumps({"type": "carrotH1ConfigSnapshot", "data": row})])
     self.addCleanup(td.cleanup)
     with self.assertRaisesRegex(H1EvidenceError, "config hash mismatch"):
+      module.load_h1_jsonl(path)
+
+  def test_invalid_trace_snapshot_identity_is_rejected_during_load(self):
+    module = self._module()
+    row = valid_trace_dict()
+    row["decisionMonoTimeNs"] += 1
+    td, path = self._write([json.dumps({"type": "carrotH1ReplayTrace", "data": row})])
+    self.addCleanup(td.cleanup)
+    with self.assertRaisesRegex(H1EvidenceError, "snapshot identity mismatch"):
       module.load_h1_jsonl(path)
 
   def test_cli_returns_zero_and_ready_summary_for_complete_evidence(self):
