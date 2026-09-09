@@ -217,3 +217,5 @@ REMOVE
 ## 10. 현재 검증 경계
 
 공개 저장소의 synthetic fixtures는 H1 evidence parser/validator의 계약을 검증하기 위한 것입니다. 실제 싼타페 route에 대한 H1 replay fidelity 검증은 실제 comma의 observability 상태를 확인하고 새 evidence를 확보한 뒤 진행합니다.
+
+현재 공개 구현 완료 범위는 **evidence 구조/무결성 검증**까지입니다. 실제 controller bridge 실행, 실제 route에서의 output equality, 차량 Plant 식별/검증은 별도 단계로 남아 있습니다.
