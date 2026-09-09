@@ -88,7 +88,13 @@ def run_closed_loop(
     ood_steps = 0
     teacher_steps = 0
 
-    max_steps = max(1, int(math.ceil(duration / dt)))
+    # Whole fixed periods cover the horizon. Ignore only quotient roundoff
+    # within four ULPs of an integer (e.g. (0.1 + 0.2) / 0.1).
+    step_ratio = duration / dt
+    nearest = round(step_ratio)
+    if nearest >= 1 and abs(step_ratio - nearest) <= 4 * math.ulp(step_ratio):
+        step_ratio = nearest
+    max_steps = max(1, int(math.ceil(step_ratio)))
     for index in range(max_steps):
         control = controller(state, world_obs)
         control_dt = float(control.dt_s)
@@ -109,6 +115,8 @@ def run_closed_loop(
                     "vehicle plant operating-domain violation: "
                     + ",".join(violations)
                 )
+            if not plant.supports_state_assimilation:
+                raise RuntimeError("teacher force requires history-preserving state assimilation")
             next_state = teacher_force(state, control, world_obs, violations)
             teacher_forced = True
             teacher_steps += 1
@@ -119,6 +127,9 @@ def run_closed_loop(
             raise RuntimeError("vehicle plant/teacher force must advance time")
         if abs((next_state.time_s - state.time_s) - dt) > max(1e-6, dt * 1e-3):
             raise RuntimeError("state time step does not match control period")
+
+        if teacher_forced:
+            plant.assimilate_state(state, next_state, control, world_obs)
 
         steps.append(
             SimulationStep(
