@@ -10,6 +10,7 @@ from carrot_sim.h1_evidence import (
   parse_config_snapshot,
   parse_replay_trace,
   verify_config_snapshot,
+  verify_replay_trace,
 )
 
 
@@ -43,7 +44,9 @@ def load_h1_jsonl(path: Path | str) -> tuple[list[H1ReplayTrace], list[H1ConfigS
     data = envelope["data"]
     try:
       if record_type == TRACE_TYPE:
-        traces.append(parse_replay_trace(data))
+        trace = parse_replay_trace(data)
+        verify_replay_trace(trace)
+        traces.append(trace)
       elif record_type == CONFIG_TYPE:
         snapshot = parse_config_snapshot(data)
         verify_config_snapshot(snapshot)
