@@ -1,9 +1,11 @@
 # Carrot-comma-SIM
 
 > **Carrot/openpilot 계열 제어기를 실제 차량 없이 반복 시험하기 위한 범용 폐루프(Closed-loop) 차량 시뮬레이터 연구 프로젝트**  
-> 첫 번째 Reference Vehicle은 `HYUNDAI_SANTA_FE_2022`입니다.
+> 첫 번째 software Reference Vehicle identity는 `HYUNDAI_SANTA_FE_2022`입니다.
 
-[한국어](README.md) · [English](README_EN.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md) · [시뮬레이션 결과는 어떻게 나오는가?](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [문서 상태 인덱스](docs/DOCUMENT_STATUS_KO.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md) · [시뮬레이션 결과는 어떻게 나오는가?](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md)
+
+> `HYUNDAI_SANTA_FE_2022`는 openpilot/시뮬레이터에서 사용하는 **software reference identity**입니다. 이 공개 식별자만으로 비공개 실제 시험차의 등록연식·트림을 추정하지 않으며, 실제 차량 identity는 private H0 evidence에서 별도로 검증합니다.
 
 ---
 
@@ -58,7 +60,7 @@ Carrot / openpilot Controller
 
 ## 2. 왜 싼타페 전용이 아니라 범용 구조인가?
 
-현재 실제 데이터와 검증의 기준 차량은 **2022 Hyundai Santa Fe**이지만, 시뮬레이터의 공통 코어는 차량에 종속되지 않도록 설계합니다.
+첫 검증 계열의 software reference identity는 **`HYUNDAI_SANTA_FE_2022`**이지만, 시뮬레이터의 공통 코어는 차량에 종속되지 않도록 설계합니다. 실제 개인 시험차의 등록연식·세부 identity는 공개 reference ID와 분리해 private evidence에서 관리합니다.
 
 ```text
 CombinedVehiclePlant          ← 공통 코어
@@ -88,7 +90,7 @@ CombinedVehiclePlant          ← 공통 코어
 |---|---|---|
 | 범용 World / Plant 분리 | ✅ 구현 | 가상 도로가 실제 차량 Plant를 몰래 대체하지 않도록 분리 |
 | 범용 `CombinedVehiclePlant` | ✅ 구현 | 다른 차량 플러그인을 추가할 수 있는 공통 코어 |
-| Santa Fe reference wrapper | ✅ 구현 | `HYUNDAI_SANTA_FE_2022` 차량 ID를 엄격하게 고정 |
+| Santa Fe reference wrapper | ✅ 구현 | `HYUNDAI_SANTA_FE_2022` software reference ID를 엄격하게 고정 |
 | 조향(Lateral) 모델 | ✅ 기준 모델 동결 | 추가 데이터에 맞춰 임의로 계속 재학습하지 않는 기준 모델 보유 |
 | 종방향(Longitudinal) 모델 | 🚧 연구 중 | 실주행 관측 데이터와 정확한 제어 입력 경계 검증 진행 중 |
 | 시나리오 카탈로그 | ✅ 구현 | 노출도·중요도·복잡도·커버리지 기준의 결정론적 우선순위 |
@@ -250,6 +252,7 @@ Carrot-comma-SIM/
 │  └─ check_openpilot_overlay.py
 ├─ tests/
 ├─ docs/
+│  ├─ DOCUMENT_STATUS_KO.md       # 최신/구조 문서 인덱스
 │  ├─ PROJECT_STATUS_KO.md
 │  ├─ H1_OBSERVABILITY_KO.md
 │  ├─ ARCHITECTURE_KO.md
