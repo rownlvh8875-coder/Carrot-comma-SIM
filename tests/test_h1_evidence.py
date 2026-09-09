@@ -5,13 +5,50 @@ import json
 import unittest
 
 
-TRACE_SHA = "11" * 32
 RADAR_SHA = "22" * 32
 CONFIG_SHA = "33" * 32
 SERVICES = (
   "modelV2", "liveTracks", "carControl", "carState", "controlsState",
   "liveParameters", "radarState", "selfdriveState", "carrotMan",
 )
+
+
+def historical_snapshot_digest(row):
+  payload = {
+    "processEpoch": row["processEpoch"],
+    "loopSequence": row["loopSequence"],
+    "plannerCycle": row["plannerCycle"],
+    "subMasterFrame": row["subMasterFrame"],
+    "captureMonoTimeNs": row["captureMonoTimeNs"],
+    "decisionMonoTimeNs": row["decisionMonoTimeNs"],
+    "logMonoTimes": tuple(row[f"{service}LogMonoTime"] for service in SERVICES),
+    "recvFrames": tuple(row[f"{service}RecvFrame"] for service in SERVICES),
+    "recvTimesNs": tuple(row[f"{service}RecvTimeNs"] for service in SERVICES),
+    "seenMask": row["seenMask"],
+    "updatedMask": row["updatedMask"],
+    "aliveMask": row["aliveMask"],
+    "freqOkMask": row["freqOkMask"],
+    "validMask": row["validMask"],
+    "planningTriggerKind": row["planningTriggerKind"],
+    "planningTriggerLogMonoTime": row["planningTriggerLogMonoTime"],
+    "runLongitudinal": row["runLongitudinal"],
+    "longitudinalPlanEmitted": row["longitudinalPlanEmitted"],
+    "liveTracksRecent": row["liveTracksRecent"],
+    "useLiveTracksTrigger": row["useLiveTracksTrigger"],
+    "triggerIntervalOk": row["triggerIntervalOk"],
+    "configSequence": row["configSequence"],
+    "configSha256": row["configSha256"],
+    "radarInputKind": row["radarInputKind"],
+    "effectiveRadarStateSha256": row["effectiveRadarStateSha256"],
+  }
+  raw = json.dumps(
+    payload,
+    sort_keys=True,
+    separators=(",", ":"),
+    ensure_ascii=False,
+    allow_nan=False,
+  ).encode("utf-8")
+  return hashlib.sha256(raw).hexdigest()
 
 
 def valid_trace_dict():
@@ -21,7 +58,7 @@ def valid_trace_dict():
     "plannerCycle": 1,
     "subMasterFrame": 20,
     "planningTriggerKind": 0,
-    "planningTriggerLogMonoTime": 123456789,
+    "planningTriggerLogMonoTime": 1000,
     "configSequence": 1,
     "configSha256": CONFIG_SHA,
     "updatedMask": 0x1FF,
@@ -42,12 +79,12 @@ def valid_trace_dict():
     "liveTracksRecent": True,
     "useLiveTracksTrigger": False,
     "triggerIntervalOk": True,
-    "consumedSnapshotIdentitySha256": TRACE_SHA,
   }
   for index, service in enumerate(SERVICES):
     row[f"{service}LogMonoTime"] = 1000 + index
     row[f"{service}RecvFrame"] = 2000 + index
     row[f"{service}RecvTimeNs"] = 3000 + index
+  row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
   return row
 
 
@@ -67,9 +104,14 @@ class TestH1EvidenceParsing(unittest.TestCase):
     self.assertIsNotNone(spec, "carrot_sim.h1_evidence must exist")
     return importlib.import_module("carrot_sim.h1_evidence")
 
-  def _verifier(self, module):
+  def _config_verifier(self, module):
     verifier = getattr(module, "verify_config_snapshot", None)
     self.assertIsNotNone(verifier, "verify_config_snapshot must exist")
+    return verifier
+
+  def _trace_verifier(self, module):
+    verifier = getattr(module, "verify_replay_trace", None)
+    self.assertIsNotNone(verifier, "verify_replay_trace must exist")
     return verifier
 
   def test_rejects_unsupported_trace_schema(self):
@@ -140,10 +182,65 @@ class TestH1EvidenceParsing(unittest.TestCase):
       "runLongitudinal": False,
       "useLiveTracksTrigger": False,
     })
+    row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
     parsed = module.parse_replay_trace(row)
     self.assertFalse(parsed.longitudinal_plan_emitted)
     self.assertEqual(parsed.config_sha256, "")
     self.assertEqual(parsed.effective_radar_state_sha256, "")
+
+  def test_replay_trace_integrity_accepts_exact_historical_identity(self):
+    module = self._module()
+    verifier = self._trace_verifier(module)
+    verifier(module.parse_replay_trace(valid_trace_dict()))
+
+  def test_replay_trace_integrity_rejects_snapshot_hash_mismatch(self):
+    module = self._module()
+    verifier = self._trace_verifier(module)
+    row = valid_trace_dict()
+    row["decisionMonoTimeNs"] += 1
+    with self.assertRaisesRegex(module.H1EvidenceError, "snapshot identity mismatch"):
+      verifier(module.parse_replay_trace(row))
+
+  def test_replay_trace_integrity_rejects_trigger_timestamp_mismatch(self):
+    module = self._module()
+    verifier = self._trace_verifier(module)
+    row = valid_trace_dict()
+    row["planningTriggerLogMonoTime"] = row["liveTracksLogMonoTime"]
+    row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
+    with self.assertRaisesRegex(module.H1EvidenceError, "planning trigger logMonoTime mismatch"):
+      verifier(module.parse_replay_trace(row))
+
+  def test_replay_trace_integrity_rejects_trigger_kind_mismatch(self):
+    module = self._module()
+    verifier = self._trace_verifier(module)
+    row = valid_trace_dict()
+    row["useLiveTracksTrigger"] = True
+    row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
+    with self.assertRaisesRegex(module.H1EvidenceError, "planning trigger kind mismatch"):
+      verifier(module.parse_replay_trace(row))
+
+  def test_replay_trace_integrity_requires_run_for_emitted_plan(self):
+    module = self._module()
+    verifier = self._trace_verifier(module)
+    row = valid_trace_dict()
+    row["runLongitudinal"] = False
+    row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
+    with self.assertRaisesRegex(module.H1EvidenceError, "emitted plan requires runLongitudinal"):
+      verifier(module.parse_replay_trace(row))
+
+  def test_replay_trace_integrity_requires_not_evaluated_radar_when_not_emitted(self):
+    module = self._module()
+    verifier = self._trace_verifier(module)
+    row = valid_trace_dict()
+    row.update({
+      "longitudinalPlanEmitted": False,
+      "runLongitudinal": False,
+      "radarInputKind": 0,
+      "effectiveRadarStateSha256": "",
+    })
+    row["consumedSnapshotIdentitySha256"] = historical_snapshot_digest(row)
+    with self.assertRaisesRegex(module.H1EvidenceError, "non-emitted plan requires radarInputKind 2"):
+      verifier(module.parse_replay_trace(row))
 
   def test_parses_config_snapshot_bytes(self):
     module = self._module()
@@ -153,7 +250,7 @@ class TestH1EvidenceParsing(unittest.TestCase):
 
   def test_config_snapshot_hash_mismatch_is_rejected(self):
     module = self._module()
-    verifier = self._verifier(module)
+    verifier = self._config_verifier(module)
     row = valid_config_dict()
     row["configSha256"] = "00" * 32
     snapshot = module.parse_config_snapshot(row)
@@ -162,7 +259,7 @@ class TestH1EvidenceParsing(unittest.TestCase):
 
   def test_config_snapshot_accepts_exact_canonical_json(self):
     module = self._module()
-    verifier = self._verifier(module)
+    verifier = self._config_verifier(module)
     payload = json.dumps(
       {"appliedConfig": {"tFollowGap1": 1.1}, "rawParams": {}},
       sort_keys=True,
@@ -177,7 +274,7 @@ class TestH1EvidenceParsing(unittest.TestCase):
 
   def test_config_snapshot_rejects_noncanonical_json_bytes(self):
     module = self._module()
-    verifier = self._verifier(module)
+    verifier = self._config_verifier(module)
     payload = b'{"rawParams": {}, "appliedConfig": {}}'
     row = valid_config_dict()
     row["canonicalJsonUtf8"] = payload.decode("utf-8")
