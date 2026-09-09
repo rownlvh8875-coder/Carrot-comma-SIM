@@ -52,9 +52,12 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 | Lateral reference model | frozen baseline exists in the research project |
 | Longitudinal plant | research in progress |
 | Deterministic scenario catalog | implemented |
-| Real-road observability research | in progress |
+| H1 evidence structural validation | implemented: complete schema-v6 trace, config SHA, snapshot identity, and trigger/radar semantics |
+| Real H1 controller replay fidelity | pending real comma evidence |
 | Automatic parameter tuning | not authorized |
 | Real-vehicle writes | disabled / not part of this public core |
+
+`H1_READY` means the evidence is structurally sufficient to begin deterministic controller-replay research. It does **not** mean controller outputs have already been reproduced, that the vehicle plant is validated, or that real-road safety has been established. See [`docs/H1_OBSERVABILITY_KO.md`](docs/H1_OBSERVABILITY_KO.md) for the current evidence contract.
 
 This is a **sanitized public research release**. Private raw driving logs, route identifiers, device/network identifiers, SSH information, personal paths, and sensitive provenance records are intentionally excluded.
 
@@ -63,12 +66,35 @@ This is a **sanitized public research release**. Private raw driving logs, route
 The project separates evidence into stages instead of tuning first and explaining later.
 
 - **H0 — data identity/provenance:** prove which vehicle, code and configuration produced the evidence.
-- **H1 — controller replay fidelity:** check whether the historical controller output can be reproduced from the corresponding inputs.
+- **H1 — controller replay fidelity:** check whether the historical controller output can be reproduced from the corresponding inputs. The public core now validates whether normalized schema-v6 H1 evidence is structurally complete and internally consistent; actual replay fidelity remains a separate real-evidence step.
 - **H2 — vehicle-response identification:** model how the real vehicle responds to controller commands.
 
 ```text
 H0 → H1 → H2 → closed-loop simulation → synthetic stress/scenario testing
 ```
+
+## H1 observability boundary
+
+Normal `rlog`/`qlog` remain primary route evidence. The minimal H1 overlay exists only to preserve planner-consumed state that can otherwise be ambiguous during deterministic replay, including loop timing, the exact planning trigger, nine service receive identities, consumed configuration identity, and effective radar identity.
+
+The public parser requires the complete historical schema-v6 `carrotH1ReplayTrace` contract and verifies its historical `consumedSnapshotIdentitySha256` by recomputing the same canonical-JSON SHA256. It also verifies the canonical config payload hash and trigger/radar/run semantics. Missing or inconsistent evidence is never silently guessed.
+
+Normalized JSONL can be checked with:
+
+```bash
+python scripts/inspect_h1_evidence.py examples/h1_evidence_ready.jsonl
+python scripts/inspect_h1_evidence.py examples/h1_evidence_missing_config.jsonl
+```
+
+Exit codes are `0 = H1_READY`, `2 = H1_HOLD`, and `3 = H1_ERROR`.
+
+The Carrot/openpilot host surface for the minimal overlay can be inspected read-only with:
+
+```bash
+python scripts/check_openpilot_overlay.py /path/to/openpilot
+```
+
+This compatibility result describes only the maintenance status of the instrumentation overlay. It is not a safety approval of an upstream Carrot release.
 
 ## Research and safety principles
 
@@ -80,6 +106,7 @@ The public contracts intentionally enforce conservative behavior:
 4. One-step fitting is not declared closed-loop validation.
 5. Scenario scores and descriptive metrics do not create tuning authority.
 6. This public simulator core does not write values to a real vehicle.
+7. Missing, malformed, or inconsistent H1 evidence is held or rejected rather than reconstructed by guesswork.
 
 > This project is a research/simulation tool. It does not certify real-road safety and does not replace driver responsibility.
 
@@ -94,20 +121,32 @@ python -m unittest discover -s tests -p 'test_*.py' -v
 python examples/basic_closed_loop.py
 ```
 
-The initial public core has no third-party Python runtime dependencies.
+The public core has no third-party Python runtime dependencies.
 
 ## Repository layout
 
 ```text
 carrot_sim/
+  h1_evidence.py
+  h1_evidence_set.py
+  h1_jsonl.py
+  openpilot_overlay_compat.py
   simulator_contract.py
   vehicle_plant_axes.py
   simulator_loop.py
   scenario_test_catalog.py
 examples/
   basic_closed_loop.py
+  h1_evidence_ready.jsonl
+  h1_evidence_missing_config.jsonl
+integration/openpilot/
+  h1_overlay_manifest.json
+scripts/
+  inspect_h1_evidence.py
+  check_openpilot_overlay.py
 tests/
 docs/
+  H1_OBSERVABILITY_KO.md
 ```
 
 ## Adding another vehicle
@@ -139,6 +178,8 @@ shared closed-loop + scenario engine
 - [x] Santa Fe strict reference wrapper
 - [x] Fail-closed simulator contract
 - [x] Deterministic scenario catalog
+- [x] Strict schema-v6 H1 evidence parsing / structural qualification
+- [ ] Capture real comma H1 evidence and validate controller replay fidelity
 - [ ] Complete Santa Fe longitudinal plant validation
 - [ ] Publish a sanitized real Carrot/openpilot controller bridge
 - [ ] Freeze a standard Vehicle Profile / Plugin format
@@ -153,5 +194,7 @@ The repository intentionally excludes raw `rlog`/`qlog`, route IDs, comma hostna
 ## Relationship to Carrot / openpilot
 
 This is an independent simulator research project intended to work with Carrot/openpilot-family controllers. The public repository does not vendor the full openpilot or Carrot source tree. Upstream names, trademarks, code and licenses remain with their respective projects.
+
+Normal Carrot-WIP updates are not approved or blocked by this simulator project. We maintain only the minimal observability overlay required for replay evidence and its compatibility boundary. Historical eGPU/Guardian/model-slot/telemetry/commissioning research is not a required dependency of the simulator H0/H1/H2 path.
 
 The redistribution license for this repository's own code has not yet been selected. Public GitHub visibility by itself does not grant additional reuse rights.
