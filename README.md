@@ -3,7 +3,7 @@
 > **Carrot/openpilot 계열 제어기를 실제 차량 없이 반복 시험하기 위한 범용 폐루프(Closed-loop) 차량 시뮬레이터 연구 프로젝트**  
 > 첫 번째 Reference Vehicle은 `HYUNDAI_SANTA_FE_2022`입니다.
 
-[한국어](README.md) · [English](README_EN.md)
+[한국어](README.md) · [English](README_EN.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md)
 
 ---
 
@@ -76,6 +76,26 @@ CombinedVehiclePlant          ← 공통 코어
 | 실제 차량 쓰기 | ⛔ 없음 | 이 공개 시뮬레이터 코어는 실차 설정/제어값을 쓰지 않음 |
 
 `H1_READY`는 evidence 구조가 deterministic replay 연구를 시작할 만큼 충분하다는 뜻일 뿐, 실제 controller replay 일치나 실도로 안전성을 뜻하지 않습니다. 자세한 계약은 [`docs/H1_OBSERVABILITY_KO.md`](docs/H1_OBSERVABILITY_KO.md)를 참고합니다.
+
+### 지금 바로 다음 단계
+
+현재 저장소 쪽 H1 구조 검증은 구현돼 있습니다. 다음 실증 단계는 **실제 comma의 `/data/openpilot` 상태를 먼저 read-only로 확인하는 것**입니다.
+
+```text
+branch / HEAD / remotes
+        ↓
+git status --short / local diff
+        ↓
+기존 H1 observability 변경 분류
+        ↓
+백업 후 최신 carrot-wip 동기화 검토
+        ↓
+최소 observability overlay 유지
+        ↓
+새 실제 H1 evidence 확보 및 replay fidelity 검증
+```
+
+초기 inventory가 끝나기 전에는 `reset --hard`, 무조건적인 `git pull`, 기존 H1 파일 삭제를 하지 않습니다. 세부 현황은 [`docs/PROJECT_STATUS_KO.md`](docs/PROJECT_STATUS_KO.md)에 정리합니다.
 
 이 저장소는 **연구용 공개판**입니다. 비공개 연구 저장소의 실제 주행 원본 로그, 장치 식별정보, 네트워크 정보, 개인 경로 및 민감한 provenance 자료는 포함하지 않습니다.
 
@@ -184,25 +204,26 @@ python scripts/check_openpilot_overlay.py /path/to/openpilot
 ```text
 Carrot-comma-SIM/
 ├─ carrot_sim/
-│  ├─ h1_evidence.py             # schema-v6 H1 trace/config strict parser + identity 검증
-│  ├─ h1_evidence_set.py         # H1_READY / H1_HOLD qualification
-│  ├─ h1_jsonl.py                # normalized JSONL ingestion boundary
+│  ├─ h1_evidence.py              # schema-v6 H1 trace/config strict parser + identity 검증
+│  ├─ h1_evidence_set.py          # H1_READY / H1_HOLD qualification
+│  ├─ h1_jsonl.py                 # normalized JSONL ingestion boundary
 │  ├─ openpilot_overlay_compat.py # upstream H1 host-surface 호환성 검사
-│  ├─ simulator_contract.py      # World / Plant / state / safety contract
-│  ├─ vehicle_plant_axes.py      # Lateral + Longitudinal 조합 및 차량 wrapper
-│  ├─ simulator_loop.py          # Fail-closed closed-loop 실행기
-│  └─ scenario_test_catalog.py   # 시나리오 정의 및 우선순위
+│  ├─ simulator_contract.py       # World / Plant / state / safety contract
+│  ├─ vehicle_plant_axes.py       # Lateral + Longitudinal 조합 및 차량 wrapper
+│  ├─ simulator_loop.py           # Fail-closed closed-loop 실행기
+│  └─ scenario_test_catalog.py    # 시나리오 정의 및 우선순위
 ├─ examples/
 │  ├─ basic_closed_loop.py
 │  ├─ h1_evidence_ready.jsonl
 │  └─ h1_evidence_missing_config.jsonl
 ├─ integration/openpilot/
-│  └─ h1_overlay_manifest.json   # live overlay 최소 허용 경계
+│  └─ h1_overlay_manifest.json    # live overlay 최소 허용 경계
 ├─ scripts/
 │  ├─ inspect_h1_evidence.py
 │  └─ check_openpilot_overlay.py
 ├─ tests/
 ├─ docs/
+│  ├─ PROJECT_STATUS_KO.md
 │  ├─ H1_OBSERVABILITY_KO.md
 │  ├─ ARCHITECTURE_KO.md
 │  └─ VEHICLE_PLUGIN_GUIDE_KO.md
@@ -243,6 +264,8 @@ Vehicle Plugin 등록
 - [x] Fail-closed simulation contract
 - [x] 결정론적 scenario catalog
 - [x] schema-v6 H1 evidence strict parser / structural qualification
+- [x] eGPU/통합 브랜치를 simulator 필수 경로에서 분리
+- [ ] 실제 comma read-only inventory 및 기존 H1 overlay 분류
 - [ ] 실제 comma H1 evidence 확보 및 controller replay fidelity 검증
 - [ ] Santa Fe longitudinal Plant 검증 완료
 - [ ] 실제 Carrot/openpilot controller bridge 공개판 정리
