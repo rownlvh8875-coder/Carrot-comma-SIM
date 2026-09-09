@@ -70,9 +70,12 @@ CombinedVehiclePlant          ← 공통 코어
 | 조향(Lateral) 모델 | ✅ 기준 모델 동결 | 추가 데이터에 맞춰 임의로 계속 재학습하지 않는 기준 모델 보유 |
 | 종방향(Longitudinal) 모델 | 🚧 연구 중 | 실주행 관측 데이터와 정확한 제어 입력 경계 검증 진행 중 |
 | 시나리오 카탈로그 | ✅ 구현 | 노출도·중요도·복잡도·커버리지 기준의 결정론적 우선순위 |
-| 실주행 관측성(Observability) | 🚧 검증 중 | 실제 제어기가 매 loop에서 무엇을 소비했는지 기록하는 연구 |
+| H1 evidence 구조 검증 | ✅ 구현 | schema-v6 전체 trace, config SHA, snapshot identity, trigger/radar 의미 일관성을 fail-closed 검증 |
+| 실제 H1 replay fidelity | 🚧 실차 evidence 대기 | 실제 comma에서 새 관측 로그를 확보한 뒤 controller output 재현성을 검증 |
 | 자동 파라미터 튜닝 | ⛔ 아직 금지 | 검증 절차가 충분해질 때까지 자동 튜닝 권한 없음 |
 | 실제 차량 쓰기 | ⛔ 없음 | 이 공개 시뮬레이터 코어는 실차 설정/제어값을 쓰지 않음 |
+
+`H1_READY`는 evidence 구조가 deterministic replay 연구를 시작할 만큼 충분하다는 뜻일 뿐, 실제 controller replay 일치나 실도로 안전성을 뜻하지 않습니다. 자세한 계약은 [`docs/H1_OBSERVABILITY_KO.md`](docs/H1_OBSERVABILITY_KO.md)를 참고합니다.
 
 이 저장소는 **연구용 공개판**입니다. 비공개 연구 저장소의 실제 주행 원본 로그, 장치 식별정보, 네트워크 정보, 개인 경로 및 민감한 provenance 자료는 포함하지 않습니다.
 
@@ -93,6 +96,8 @@ CombinedVehiclePlant          ← 공통 코어
 > "같은 입력을 주면 당시 제어기가 만들었던 출력을 다시 재현할 수 있는가?"
 
 이를 **Replay Fidelity(재생 충실도)**라고 합니다. H1이 충분하지 않으면 차이가 제어기 때문인지 차량 때문인지 분리하기 어렵습니다.
+
+현재 공개 코어에는 schema-v6 H1 evidence의 구조적 충분성을 검사하는 계층이 구현되어 있습니다. 실제 재현 충실도 판정은 실제 comma evidence로 별도 수행합니다.
 
 ### H2 — 차량 반응 모델 확인
 
@@ -140,6 +145,7 @@ Synthetic stress / scenario testing
 4. 단일 step fitting 결과를 closed-loop 검증 결과라고 부르지 않습니다.
 5. 시나리오 점수나 behavior metric이 자동으로 튜닝 권한을 만들지 않습니다.
 6. 공개 시뮬레이터 코어는 실제 차량에 값을 쓰지 않습니다.
+7. H1 evidence가 누락·변조·불일치하면 추측해서 복구하지 않고 `H1_HOLD` 또는 `H1_ERROR`로 처리합니다.
 
 > **이 프로젝트는 운전자 보조 시스템의 연구/시뮬레이션 도구이며, 실제 도로 안전을 보증하거나 운전자의 주의 의무를 대체하지 않습니다.**
 
@@ -156,6 +162,19 @@ python -m unittest discover -s tests -p 'test_*.py' -v
 python examples/basic_closed_loop.py
 ```
 
+H1 synthetic evidence 계약 확인:
+
+```bash
+python scripts/inspect_h1_evidence.py examples/h1_evidence_ready.jsonl
+python scripts/inspect_h1_evidence.py examples/h1_evidence_missing_config.jsonl
+```
+
+openpilot checkout의 H1 overlay host surface를 **읽기 전용**으로 확인:
+
+```bash
+python scripts/check_openpilot_overlay.py /path/to/openpilot
+```
+
 현재 공개 코어는 외부 Python 패키지 없이 동작하도록 구성했습니다.
 
 ---
@@ -165,16 +184,26 @@ python examples/basic_closed_loop.py
 ```text
 Carrot-comma-SIM/
 ├─ carrot_sim/
+│  ├─ h1_evidence.py             # schema-v6 H1 trace/config strict parser + identity 검증
+│  ├─ h1_evidence_set.py         # H1_READY / H1_HOLD qualification
+│  ├─ h1_jsonl.py                # normalized JSONL ingestion boundary
+│  ├─ openpilot_overlay_compat.py # upstream H1 host-surface 호환성 검사
 │  ├─ simulator_contract.py      # World / Plant / state / safety contract
 │  ├─ vehicle_plant_axes.py      # Lateral + Longitudinal 조합 및 차량 wrapper
 │  ├─ simulator_loop.py          # Fail-closed closed-loop 실행기
 │  └─ scenario_test_catalog.py   # 시나리오 정의 및 우선순위
 ├─ examples/
-│  └─ basic_closed_loop.py       # 최소 실행 예제
+│  ├─ basic_closed_loop.py
+│  ├─ h1_evidence_ready.jsonl
+│  └─ h1_evidence_missing_config.jsonl
+├─ integration/openpilot/
+│  └─ h1_overlay_manifest.json   # live overlay 최소 허용 경계
+├─ scripts/
+│  ├─ inspect_h1_evidence.py
+│  └─ check_openpilot_overlay.py
 ├─ tests/
-│  ├─ test_vehicle_plant_axes.py
-│  └─ test_simulator_loop.py
 ├─ docs/
+│  ├─ H1_OBSERVABILITY_KO.md
 │  ├─ ARCHITECTURE_KO.md
 │  └─ VEHICLE_PLUGIN_GUIDE_KO.md
 └─ README_EN.md
@@ -213,6 +242,8 @@ Vehicle Plugin 등록
 - [x] Santa Fe strict reference wrapper
 - [x] Fail-closed simulation contract
 - [x] 결정론적 scenario catalog
+- [x] schema-v6 H1 evidence strict parser / structural qualification
+- [ ] 실제 comma H1 evidence 확보 및 controller replay fidelity 검증
 - [ ] Santa Fe longitudinal Plant 검증 완료
 - [ ] 실제 Carrot/openpilot controller bridge 공개판 정리
 - [ ] 표준 Vehicle Profile / Plugin 포맷 확정
@@ -242,6 +273,8 @@ Vehicle Plugin 등록
 
 이 저장소는 Carrot/openpilot 계열 제어기를 연구하기 위한 **독립적인 시뮬레이터 프로젝트**입니다. 현재 공개판에는 openpilot 또는 Carrot의 전체 소스 트리를 vendoring하지 않습니다. 외부 프로젝트의 상표·코드·라이선스는 각 upstream 프로젝트에 귀속됩니다.
 
+Carrot-WIP의 일반 업데이트를 이 프로젝트가 승인하거나 차단하지 않습니다. 우리가 유지하는 것은 replay에 필요한 최소 H1 observability overlay와 그 호환성 검사입니다. eGPU 연구 브랜치/Guardian/model-slot/telemetry/commissioning은 이 시뮬레이터의 필수 dependency가 아닙니다.
+
 현재 저장소 자체 코드의 재배포 라이선스는 별도로 정리할 예정입니다. 단순히 GitHub 저장소가 public이라는 사실만으로 별도의 사용 권한이 자동 부여되는 것은 아닙니다.
 
 ---
@@ -267,4 +300,4 @@ Vehicle Plugin 등록
               Regression / Coverage Report
 ```
 
-**싼타페 한 대를 흉내 내는 프로그램이 아니라, 실제 주행 증거를 기반으로 여러 차량의 응답 모델을 추가할 수 있는 Carrot/openpilot용 범용 폐루프 시뮬레이션 플랫폼**을 만드는 것이 장기 목표입니다.
+**싼타페 한 대를 흉내 내는 프로그램이 아니라, 실제 주행 증거를 기반으로 여러 차량의 응답 모델을 추가할 수 있는 Carrot/openpilot용 범용 시뮬레이션 구조**가 최종 목표입니다.
