@@ -3,7 +3,7 @@
 > **Carrot/openpilot 계열 제어기를 실제 차량 없이 반복 시험하기 위한 범용 폐루프(Closed-loop) 차량 시뮬레이터 연구 프로젝트**  
 > 첫 번째 Reference Vehicle은 `HYUNDAI_SANTA_FE_2022`입니다.
 
-[한국어](README.md) · [English](README_EN.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
 
 ---
 
@@ -72,7 +72,7 @@ CombinedVehiclePlant          ← 공통 코어
 | 시나리오 카탈로그 | ✅ 구현 | 노출도·중요도·복잡도·커버리지 기준의 결정론적 우선순위 |
 | H1 evidence 구조 검증 | ✅ 구현 | schema-v6 전체 trace, config SHA, snapshot identity, trigger/radar 의미 일관성을 fail-closed 검증 |
 | 실제 H1 replay fidelity | 🚧 실차 evidence 대기 | 실제 comma에서 새 관측 로그를 확보한 뒤 controller output 재현성을 검증 |
-| 자동 파라미터 튜닝 | ⛔ 아직 금지 | 검증 절차가 충분해질 때까지 자동 튜닝 권한 없음 |
+| 파라미터 후보 평가/추천 | 📐 기준 문서화 | Safety-related performance / Comfort / Tracking + Hard Gate 기반. 실제 comma 자동 적용은 금지 |
 | 실제 차량 쓰기 | ⛔ 없음 | 이 공개 시뮬레이터 코어는 실차 설정/제어값을 쓰지 않음 |
 
 `H1_READY`는 evidence 구조가 deterministic replay 연구를 시작할 만큼 충분하다는 뜻일 뿐, 실제 controller replay 일치나 실도로 안전성을 뜻하지 않습니다. 자세한 계약은 [`docs/H1_OBSERVABILITY_KO.md`](docs/H1_OBSERVABILITY_KO.md)를 참고합니다.
@@ -118,6 +118,8 @@ git status --short / local diff
 이를 **Replay Fidelity(재생 충실도)**라고 합니다. H1이 충분하지 않으면 차이가 제어기 때문인지 차량 때문인지 분리하기 어렵습니다.
 
 현재 공개 코어에는 schema-v6 H1 evidence의 구조적 충분성을 검사하는 계층이 구현되어 있습니다. 실제 재현 충실도 판정은 실제 comma evidence로 별도 수행합니다.
+
+파라미터 후보 평가는 [`docs/SCORING_AND_TUNING_KO.md`](docs/SCORING_AND_TUNING_KO.md)의 계약을 따릅니다. Safety-related performance는 TTC/THW/제동여유/차선오차 등, Comfort는 jerk/가감속·조향 진동 등, Tracking은 gap error/상대속도 오차/응답시간·settling 등을 사용합니다. Hard Gate를 위반한 후보는 다른 점수가 좋아도 추천하지 않으며, 추천 결과가 실제 차량 Params를 자동 변경하지 않습니다.
 
 ### H2 — 차량 반응 모델 확인
 
