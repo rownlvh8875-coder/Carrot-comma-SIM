@@ -1,9 +1,11 @@
 # Carrot-comma-SIM
 
 > **A multi-vehicle closed-loop simulator research project for testing Carrot/openpilot-family controllers without repeatedly driving the real vehicle.**  
-> The first reference vehicle is `HYUNDAI_SANTA_FE_2022`.
+> The first software reference vehicle identity is `HYUNDAI_SANTA_FE_2022`.
 
-[한국어](README.md) · [English](README_EN.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Output flow (KO)](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [Documentation status (KO)](docs/DOCUMENT_STATUS_KO.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Output flow (KO)](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
+
+> `HYUNDAI_SANTA_FE_2022` is an **openpilot/simulator software reference identity**. It must not be used to infer the registered model year or trim of a private real test vehicle; real vehicle identity is qualified separately in private H0 evidence.
 
 ## What this project is
 
@@ -43,7 +45,7 @@ A hard-braking lead scenario, for example, should show the deceleration Carrot r
 
 ## Multi-vehicle architecture
 
-The project started with a 2022 Hyundai Santa Fe, but the common simulator core is intentionally vehicle-independent.
+The project started with the software reference identity `HYUNDAI_SANTA_FE_2022`, but the common simulator core is intentionally vehicle-independent. Private real-vehicle year/trim identity is tracked separately from this public reference ID.
 
 ```text
 CombinedVehiclePlant
@@ -184,6 +186,7 @@ scripts/
   check_openpilot_overlay.py
 tests/
 docs/
+  DOCUMENT_STATUS_KO.md
   PROJECT_STATUS_KO.md
   H1_OBSERVABILITY_KO.md
   ARCHITECTURE_KO.md
