@@ -68,3 +68,10 @@ def inspect_openpilot_overlay_source(root: Path | str) -> OverlayCompatibilityRe
     missing_paths=tuple(missing_paths),
     missing_anchors=tuple(missing_anchors),
   )
+
+
+def classify_rebase_result(source_status: str, conflicts: tuple[str, ...]) -> str:
+  """Classify only H1 overlay maintenance effort, never upstream driving safety."""
+  if source_status == "COMPATIBLE" and not conflicts:
+    return "FAST_COMPATIBILITY_PATH"
+  return "REVALIDATION_REQUIRED"
