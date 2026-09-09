@@ -3,7 +3,7 @@
 > **A multi-vehicle closed-loop simulator research project for testing Carrot/openpilot-family controllers without repeatedly driving the real vehicle.**  
 > The first reference vehicle is `HYUNDAI_SANTA_FE_2022`.
 
-[한국어](README.md) · [English](README_EN.md)
+[한국어](README.md) · [English](README_EN.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md)
 
 ## What this project is
 
@@ -59,6 +59,28 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 
 `H1_READY` means the evidence is structurally sufficient to begin deterministic controller-replay research. It does **not** mean controller outputs have already been reproduced, that the vehicle plant is validated, or that real-road safety has been established. See [`docs/H1_OBSERVABILITY_KO.md`](docs/H1_OBSERVABILITY_KO.md) for the current evidence contract.
 
+### Immediate next step
+
+The next real-device step is not another simulator code change. It is a **read-only inventory of the current comma `/data/openpilot` checkout** before any pull/reset/reapply operation:
+
+```text
+branch / HEAD / remotes
+        ↓
+git status --short / local diff
+        ↓
+classify existing H1 observability changes
+        ↓
+back up the recoverable diff
+        ↓
+review latest carrot-wip synchronization
+        ↓
+retain only the minimal observability overlay
+        ↓
+capture new real H1 evidence and validate replay fidelity
+```
+
+Do not use `reset --hard`, an unconditional `git pull`, or delete the existing H1 files before that inventory and backup are complete.
+
 This is a **sanitized public research release**. Private raw driving logs, route identifiers, device/network identifiers, SSH information, personal paths, and sensitive provenance records are intentionally excluded.
 
 ## H0 / H1 / H2
@@ -78,6 +100,8 @@ H0 → H1 → H2 → closed-loop simulation → synthetic stress/scenario testin
 Normal `rlog`/`qlog` remain primary route evidence. The minimal H1 overlay exists only to preserve planner-consumed state that can otherwise be ambiguous during deterministic replay, including loop timing, the exact planning trigger, nine service receive identities, consumed configuration identity, and effective radar identity.
 
 The public parser requires the complete historical schema-v6 `carrotH1ReplayTrace` contract and verifies its historical `consumedSnapshotIdentitySha256` by recomputing the same canonical-JSON SHA256. It also verifies the canonical config payload hash and trigger/radar/run semantics. Missing or inconsistent evidence is never silently guessed.
+
+The live overlay is limited to observation-only schema/service/helper/hooks required for H1 replay evidence. It must not maintain eGPU/Guardian/model-slot/telemetry, steering/braking/acceleration policy changes, Panda safety changes, actuator-limit changes, or a separate simulator-owned Carrot control fork.
 
 Normalized JSONL can be checked with:
 
@@ -146,7 +170,10 @@ scripts/
   check_openpilot_overlay.py
 tests/
 docs/
+  PROJECT_STATUS_KO.md
   H1_OBSERVABILITY_KO.md
+  ARCHITECTURE_KO.md
+  VEHICLE_PLUGIN_GUIDE_KO.md
 ```
 
 ## Adding another vehicle
@@ -179,6 +206,8 @@ shared closed-loop + scenario engine
 - [x] Fail-closed simulator contract
 - [x] Deterministic scenario catalog
 - [x] Strict schema-v6 H1 evidence parsing / structural qualification
+- [x] Remove eGPU/integrated branches from the simulator's required path
+- [ ] Read-only inventory of the real comma and classify the existing H1 overlay
 - [ ] Capture real comma H1 evidence and validate controller replay fidelity
 - [ ] Complete Santa Fe longitudinal plant validation
 - [ ] Publish a sanitized real Carrot/openpilot controller bridge
