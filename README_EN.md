@@ -3,7 +3,7 @@
 > **A multi-vehicle closed-loop simulator research project for testing Carrot/openpilot-family controllers without repeatedly driving the real vehicle.**  
 > The first reference vehicle is `HYUNDAI_SANTA_FE_2022`.
 
-[한국어](README.md) · [English](README_EN.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Output flow (KO)](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
 
 ## What this project is
 
@@ -27,6 +27,19 @@ Carrot / openpilot Controller
 ```
 
 The controller output changes the simulated vehicle state, and that new state becomes the next controller input. This is the closed loop.
+
+### What does a simulation run produce?
+
+```text
+vehicle + Carrot settings + scenario
+        → controller command
+        → vehicle-plant response
+        → time-series vehicle state
+        → safety-related / comfort / tracking metrics
+        → baseline-versus-candidate comparison
+```
+
+A hard-braking lead scenario, for example, should show the deceleration Carrot requested, the delayed/dynamic vehicle response, and the resulting minimum gap, TTC, jerk and tracking error. The intended output includes raw metrics, plots, worst-case scenarios and trade-offs rather than a single opaque score. See [`docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md`](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md); its numbers are illustrative, not validated vehicle measurements.
 
 ## Multi-vehicle architecture
 
