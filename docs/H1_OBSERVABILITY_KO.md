@@ -219,5 +219,3 @@ REMOVE
 공개 저장소의 synthetic fixtures는 H1 evidence parser/validator의 계약을 검증하기 위한 것입니다. 실제 싼타페 route에 대한 H1 replay fidelity 검증은 실제 comma의 observability 상태를 확인하고 새 evidence를 확보한 뒤 진행합니다.
 
 현재 공개 구현 완료 범위는 **evidence 구조/무결성 검증**까지입니다. 실제 controller bridge 실행, 실제 route에서의 output equality, 차량 Plant 식별/검증은 별도 단계로 남아 있습니다.
-
-최신 simulator feature branch의 exact-head CI는 Python 3.11/3.12에서 unit tests, synthetic closed-loop example, public privacy audit를 모두 수행하도록 구성합니다. 이 문서는 특정 CI run의 성공을 고정 사실로 기록하지 않으며, 머지 시점에는 항상 해당 exact HEAD의 새 CI 결과를 확인합니다.
