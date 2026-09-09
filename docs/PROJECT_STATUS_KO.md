@@ -24,6 +24,8 @@
 - openpilot H1 host-surface 읽기 전용 compatibility checker
 - eGPU/Guardian/model-slot/telemetry를 simulator H0/H1/H2 필수 경로에서 분리
 - 공개 개인정보 audit 및 Python 3.11/3.12 CI
+- Safety-related performance / Comfort / Tracking 평가·추천 계약 문서화
+- 공개 core와 private evidence/tuning layer 운영정책 문서화
 - README / architecture / H1 / current-status 문서 최신화
 - 완료된 `docs/superpowers` plan/spec 제거
 - 병합 완료 작업 브랜치 `codex/selective-public-20260907`, `feat/h1-evidence-v1` 제거
@@ -121,6 +123,8 @@ eGPU는 과거 참고·연구 대상으로 분석된 이력이 있으나 현재 
 2. `docs/PROJECT_STATUS_KO.md` — 현재 완료/미완료/다음 작업
 3. `docs/ARCHITECTURE_KO.md` — 구조와 책임 경계
 4. `docs/H1_OBSERVABILITY_KO.md` — H1 evidence 계약과 실차 observability 원칙
-5. `docs/VEHICLE_PLUGIN_GUIDE_KO.md` — 차량 확장 규칙
+5. `docs/SCORING_AND_TUNING_KO.md` — 안전 관련 성능·승차감·추종성 및 파라미터 추천 기준
+6. `docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md` — 공개 core / 비공개 evidence·튜닝 계층 운영정책
+7. `docs/VEHICLE_PLUGIN_GUIDE_KO.md` — 차량 확장 규칙
 
 구현이 끝난 과거 작업계획·agent용 plan/spec 문서는 제거했으며 현재 프로젝트 상태의 source of truth로 사용하지 않습니다.
