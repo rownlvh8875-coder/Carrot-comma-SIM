@@ -23,7 +23,7 @@ UPSTREAM_HOST_ANCHORS = {
     "class LongitudinalPlanner",
   ),
   "openpilot/selfdrive/controls/plannerd.py": (
-    "def plannerd_thread",
+    "def main():",
   ),
 }
 
