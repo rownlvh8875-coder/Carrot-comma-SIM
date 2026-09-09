@@ -1,5 +1,7 @@
 # 새 차량 Plugin 추가 가이드
 
+> 문서 역할과 최신 상태는 [`DOCUMENT_STATUS_KO.md`](DOCUMENT_STATUS_KO.md)를 참고합니다. 아래 `HYUNDAI_SANTA_FE_2022` 같은 값은 **software/controller identity 예시**이며 실제 차량의 등록연식·트림과 동일한 개념이 아닐 수 있습니다. 실제 vehicle identity는 H0에서 별도로 검증합니다.
+
 ## 목적
 
 이 문서는 Carrot-comma-SIM에 새로운 차량을 추가할 때 따라야 할 기본 절차를 설명합니다.
@@ -12,7 +14,7 @@
 
 ## 1. 차량 ID 정의
 
-차량을 식별할 수 있는 안정적인 ID를 정합니다.
+차량을 식별할 수 있는 안정적인 **software/controller ID**를 정합니다.
 
 예:
 
@@ -22,7 +24,7 @@ KIA_SORENTO_2023
 HYUNDAI_IONIQ_5_2024
 ```
 
-단순 마케팅 이름보다 실제 Controller/CarParams 쪽 식별자와 연결할 수 있는 이름이 좋습니다.
+단순 마케팅 이름보다 실제 Controller/CarParams 쪽 식별자와 연결할 수 있는 이름이 좋습니다. 다만 software ID의 연식 문자열을 실제 등록연식으로 자동 해석하지 않습니다.
 
 ---
 
@@ -32,7 +34,7 @@ HYUNDAI_IONIQ_5_2024
 
 확인 대상 예:
 
-- 차량 fingerprint / CarParams
+- 실제 차량 identity와 software fingerprint/CarParams의 대응
 - Controller 계열과 commit
 - 주요 설정값
 - 로그 파일 무결성
@@ -209,7 +211,8 @@ INDEPENDENTLY_VALIDATED
 새 차량을 "지원"으로 표시하기 전:
 
 ```text
-[ ] vehicle identity 고정
+[ ] software vehicle identity 고정
+[ ] 실제 차량 identity와 software ID의 H0 대응 확인
 [ ] H0 provenance 검토
 [ ] lateral command boundary 확인
 [ ] longitudinal command boundary 확인
