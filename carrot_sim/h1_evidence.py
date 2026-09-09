@@ -183,6 +183,73 @@ def parse_replay_trace(row: dict[str, Any]) -> H1ReplayTrace:
   )
 
 
+def _replay_snapshot_identity(trace: H1ReplayTrace) -> str:
+  payload = {
+    "processEpoch": trace.process_epoch,
+    "loopSequence": trace.loop_sequence,
+    "plannerCycle": trace.planner_cycle,
+    "subMasterFrame": trace.submaster_frame,
+    "captureMonoTimeNs": trace.capture_mono_time_ns,
+    "decisionMonoTimeNs": trace.decision_mono_time_ns,
+    "logMonoTimes": trace.log_mono_times,
+    "recvFrames": trace.recv_frames,
+    "recvTimesNs": trace.recv_times_ns,
+    "seenMask": trace.seen_mask,
+    "updatedMask": trace.updated_mask,
+    "aliveMask": trace.alive_mask,
+    "freqOkMask": trace.freq_ok_mask,
+    "validMask": trace.valid_mask,
+    "planningTriggerKind": trace.planning_trigger_kind,
+    "planningTriggerLogMonoTime": trace.planning_trigger_log_mono_time,
+    "runLongitudinal": trace.run_longitudinal,
+    "longitudinalPlanEmitted": trace.longitudinal_plan_emitted,
+    "liveTracksRecent": trace.live_tracks_recent,
+    "useLiveTracksTrigger": trace.use_live_tracks_trigger,
+    "triggerIntervalOk": trace.trigger_interval_ok,
+    "configSequence": trace.config_sequence,
+    "configSha256": trace.config_sha256,
+    "radarInputKind": trace.radar_input_kind,
+    "effectiveRadarStateSha256": trace.effective_radar_state_sha256,
+  }
+  raw = json.dumps(
+    payload,
+    sort_keys=True,
+    separators=(",", ":"),
+    ensure_ascii=False,
+    allow_nan=False,
+  ).encode("utf-8")
+  return hashlib.sha256(raw).hexdigest()
+
+
+def verify_replay_trace(trace: H1ReplayTrace) -> None:
+  expected_trigger_kind = 1 if trace.use_live_tracks_trigger else 0
+  if trace.planning_trigger_kind != expected_trigger_kind:
+    raise H1EvidenceError("planning trigger kind mismatch")
+
+  expected_trigger_log_mono_time = trace.log_mono_times[expected_trigger_kind]
+  if trace.planning_trigger_log_mono_time != expected_trigger_log_mono_time:
+    raise H1EvidenceError("planning trigger logMonoTime mismatch")
+
+  if trace.run_longitudinal and not trace.trigger_interval_ok:
+    raise H1EvidenceError("runLongitudinal requires triggerIntervalOk")
+
+  if trace.longitudinal_plan_emitted:
+    if not trace.run_longitudinal:
+      raise H1EvidenceError("emitted plan requires runLongitudinal")
+    expected_radar_input_kind = 1 if trace.use_live_tracks_trigger else 0
+    if trace.radar_input_kind != expected_radar_input_kind:
+      raise H1EvidenceError("emitted plan radarInputKind mismatch")
+  else:
+    if trace.radar_input_kind != 2:
+      raise H1EvidenceError("non-emitted plan requires radarInputKind 2")
+    if trace.effective_radar_state_sha256:
+      raise H1EvidenceError("non-emitted plan requires empty effective radar identity")
+
+  expected_snapshot_identity = _replay_snapshot_identity(trace)
+  if expected_snapshot_identity != trace.consumed_snapshot_identity_sha256:
+    raise H1EvidenceError("snapshot identity mismatch")
+
+
 def parse_config_snapshot(row: dict[str, Any]) -> H1ConfigSnapshot:
   if not isinstance(row, dict):
     raise H1EvidenceError("H1 config snapshot must be an object")
