@@ -1,6 +1,6 @@
 # Carrot-comma-SIM 현재 상태
 
-기준일: 2026-09-09
+기준일: 2026-09-10
 
 ## 1. 프로젝트 목적
 
@@ -30,45 +30,57 @@
 - README / architecture / H1 / current-status 문서 최신화
 - 완료된 `docs/superpowers` plan/spec 제거
 - 병합 완료 작업 브랜치 `codex/selective-public-20260907`, `feat/h1-evidence-v1` 제거
+- 실제 comma read-only inventory 및 기존 H1 observability 변경 분류 완료
+- 최신 `carrot-wip` 기준 최소 H1 overlay 재적용 및 offroad build/reboot/runtime schema 검증 완료
+- stage H1 관련 회귀검증 `196/196 PASS`, capture/publish fail-open 경로 포함
+- live comma에서 `carrotH1ReplayTrace` / `carrotH1ConfigSnapshot` runtime schema 생성 확인
 
 ## 3. 아직 완료되지 않은 범위
 
 현재 `H1_READY`는 evidence 구조와 무결성이 controller replay를 시작할 만큼 충분하다는 뜻입니다. 다음 항목은 아직 실증 완료가 아닙니다.
 
-- 실제 comma에서 새 H1 observability evidence 확보
+- 차량 연결 후 새 moving schema-v6 H1 observability evidence 확보
 - 실제 route 기반 controller output equality / replay fidelity 검증
 - Santa Fe longitudinal Vehicle Plant의 최종 검증
 - 실제 Carrot/openpilot controller bridge의 공개판 정리
 - 차량별 표준 Vehicle Profile / Plugin 포맷 확정
 - 두 번째 차량에서 전체 방법론 재현
 
-## 4. 다음 작업 — 실제 comma 연결 후
+## 4. 다음 작업 — 차량 연결 후
 
-다음 단계는 코드 작성이 아니라 먼저 **현재 comma 상태를 읽기 전용으로 확정**하는 것입니다.
+실제 comma의 read-only inventory와 offroad 업데이트/검증은 완료했습니다. 다음 단계는 **차량에 연결한 상태에서 실주행 H1 evidence를 확보하는 것**입니다.
 
-순서:
+현재 일반화된 상태:
 
 ```text
-comma 연결
-  ↓
-/data/openpilot branch / HEAD / remotes 확인
-  ↓
-git status --short 및 local diff 확보
-  ↓
-H1 관련 기존 변경만 별도 분류
-  ↓
-OBSERVABILITY_REQUIRED / SIMULATOR_OFFLINE / UNRELATED / REMOVE
-  ↓
-백업이 확보된 뒤에만 최신 carrot-wip 동기화 검토
-  ↓
-최소 H1 observability overlay 재적용/유지
-  ↓
-offroad 기동 및 logging 확인
-  ↓
-새 실주행 evidence 확보
+upstream carrot-wip 최신 기준선 = 동기화 완료
+최소 H1 observability overlay   = 유지
+offroad build / reboot          = PASS
+runtime H1 schema               = PASS
+실차 moving H1 evidence         = 아직 없음
+controller replay fidelity      = 아직 미검증
+real vehicle write              = false
 ```
 
-초기 점검이 끝나기 전에는 `reset --hard`, 무조건적인 `git pull`, 기존 H1 파일 삭제를 하지 않습니다.
+다음 순서:
+
+```text
+차량 연결
+  ↓
+정차 상태에서 CarParams / fingerprint / plannerd 확인
+  ↓
+H1 trace/config 실제 발행 확인
+  ↓
+짧은 moving route 수집
+  ↓
+trace/config/Params 연속성 및 provenance 검사
+  ↓
+controller output equality / replay fidelity 검증
+  ↓
+H1이 충분할 때만 H2 longitudinal Plant 검증으로 이동
+```
+
+upstream이 다시 바뀌기 전까지 live comma에서 반복적인 무조건 `git pull`은 필요하지 않습니다. 이후 업데이트는 H1 overlay 보존과 compatibility 확인을 전제로 처리합니다.
 
 ## 5. 저장소 책임 경계
 

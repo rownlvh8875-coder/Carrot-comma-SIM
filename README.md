@@ -93,7 +93,8 @@ CombinedVehiclePlant          ← 공통 코어
 | 종방향(Longitudinal) 모델 | 🚧 연구 중 | 실주행 관측 데이터와 정확한 제어 입력 경계 검증 진행 중 |
 | 시나리오 카탈로그 | ✅ 구현 | 노출도·중요도·복잡도·커버리지 기준의 결정론적 우선순위 |
 | H1 evidence 구조 검증 | ✅ 구현 | schema-v6 전체 trace, config SHA, snapshot identity, trigger/radar 의미 일관성을 fail-closed 검증 |
-| 실제 H1 replay fidelity | 🚧 실차 evidence 대기 | 실제 comma에서 새 관측 로그를 확보한 뒤 controller output 재현성을 검증 |
+| 실제 comma inventory / H1 overlay offroad 검증 | ✅ 완료 | 최신 `carrot-wip` 기준 최소 observability overlay를 백업·재적용하고 build/reboot/runtime schema 검증 완료 |
+| 실제 H1 replay fidelity | 🚧 moving evidence 대기 | 차량 연결 후 새 schema-v6 주행 evidence를 확보한 뒤 controller output 재현성을 검증 |
 | 파라미터 후보 평가/추천 | 📐 기준 문서화 | Safety-related performance / Comfort / Tracking + Hard Gate 기반. 실제 comma 자동 적용은 금지 |
 | 실제 차량 쓰기 | ⛔ 없음 | 이 공개 시뮬레이터 코어는 실차 설정/제어값을 쓰지 않음 |
 
@@ -101,23 +102,25 @@ CombinedVehiclePlant          ← 공통 코어
 
 ### 지금 바로 다음 단계
 
-현재 저장소 쪽 H1 구조 검증은 구현돼 있습니다. 다음 실증 단계는 **실제 comma의 `/data/openpilot` 상태를 먼저 read-only로 확인하는 것**입니다.
+실제 comma의 read-only inventory, 기존 H1 변경 백업/분류, 최신 `carrot-wip` 동기화, 최소 observability overlay 재적용, offroad build/reboot/runtime schema 검증까지 완료했습니다. 공개판에는 장치 식별정보나 개인 경로를 싣지 않고 결과만 일반화해 기록합니다.
+
+다음 실증 게이트는 **차량 연결 상태에서 새 schema-v6 H1 evidence를 수집하고 실제 controller replay fidelity를 검증하는 것**입니다.
 
 ```text
-branch / HEAD / remotes
+차량 연결 + 정차 상태 확인
         ↓
-git status --short / local diff
+CarParams / fingerprint / plannerd 실제 기동 확인
         ↓
-기존 H1 observability 변경 분류
+carrotH1ReplayTrace + carrotH1ConfigSnapshot 생성 확인
         ↓
-백업 후 최신 carrot-wip 동기화 검토
+짧은 moving route 수집
         ↓
-최소 observability overlay 유지
+trace/config 연속성 및 provenance 검증
         ↓
-새 실제 H1 evidence 확보 및 replay fidelity 검증
+controller output replay fidelity 검증
 ```
 
-초기 inventory가 끝나기 전에는 `reset --hard`, 무조건적인 `git pull`, 기존 H1 파일 삭제를 하지 않습니다. 세부 현황은 [`docs/PROJECT_STATUS_KO.md`](docs/PROJECT_STATUS_KO.md)에 정리합니다.
+현재 단계에서는 일반 사용자가 live comma에서 무조건적인 `git pull`을 반복할 이유가 없습니다. upstream이 바뀌면 먼저 simulator/observer compatibility를 확인하고, H1 overlay를 보존한 상태로 업데이트합니다. 세부 현황은 [`docs/PROJECT_STATUS_KO.md`](docs/PROJECT_STATUS_KO.md)에 정리합니다.
 
 이 저장소는 **연구용 공개판**입니다. 비공개 연구 저장소의 실제 주행 원본 로그, 장치 식별정보, 네트워크 정보, 개인 경로 및 민감한 provenance 자료는 포함하지 않습니다.
 
@@ -289,8 +292,8 @@ Vehicle Plugin 등록
 - [x] 결정론적 scenario catalog
 - [x] schema-v6 H1 evidence strict parser / structural qualification
 - [x] eGPU/통합 브랜치를 simulator 필수 경로에서 분리
-- [ ] 실제 comma read-only inventory 및 기존 H1 overlay 분류
-- [ ] 실제 comma H1 evidence 확보 및 controller replay fidelity 검증
+- [x] 실제 comma read-only inventory / H1 overlay 분류 / 최신화 / offroad 검증
+- [ ] 실제 comma moving H1 evidence 확보 및 controller replay fidelity 검증
 - [ ] Santa Fe longitudinal Plant 검증 완료
 - [ ] 실제 Carrot/openpilot controller bridge 공개판 정리
 - [ ] 표준 Vehicle Profile / Plugin 포맷 확정

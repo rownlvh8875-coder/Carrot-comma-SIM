@@ -66,7 +66,8 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 | Longitudinal plant | research in progress |
 | Deterministic scenario catalog | implemented |
 | H1 evidence structural validation | implemented: complete schema-v6 trace, config SHA, snapshot identity, and trigger/radar semantics |
-| Real H1 controller replay fidelity | pending real comma evidence |
+| Real comma inventory / H1 overlay offroad qualification | completed: backup, latest upstream synchronization, minimal overlay reapply, build/reboot/runtime-schema checks |
+| Real H1 controller replay fidelity | pending a new moving schema-v6 route |
 | Parameter candidate scoring/recommendation | contract documented; no automatic real-vehicle parameter write |
 | Real-vehicle writes | disabled / not part of this public core |
 
@@ -74,25 +75,25 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 
 ### Immediate next step
 
-The next real-device step is not another simulator code change. It is a **read-only inventory of the current comma `/data/openpilot` checkout** before any pull/reset/reapply operation:
+The real comma inventory, recoverable backup, latest `carrot-wip` synchronization, minimal H1 observability overlay reapply, offroad build, reboot, and runtime schema checks are complete. Device identifiers, network details, and personal paths remain private.
+
+The next empirical gate is a **vehicle-connected moving schema-v6 route**:
 
 ```text
-branch / HEAD / remotes
+connect the vehicle and confirm stationary state
         ↓
-git status --short / local diff
+confirm CarParams / fingerprint / real plannerd startup
         ↓
-classify existing H1 observability changes
+confirm carrotH1ReplayTrace + carrotH1ConfigSnapshot activity
         ↓
-back up the recoverable diff
+capture a short moving route
         ↓
-review latest carrot-wip synchronization
+validate trace/config continuity and provenance
         ↓
-retain only the minimal observability overlay
-        ↓
-capture new real H1 evidence and validate replay fidelity
+validate controller output replay fidelity
 ```
 
-Do not use `reset --hard`, an unconditional `git pull`, or delete the existing H1 files before that inventory and backup are complete.
+There is no reason to perform repeated unconditional pulls on the live comma at this point. Future upstream changes should first be classified for simulator/observer compatibility while preserving the minimal H1 overlay.
 
 This is a **sanitized public research release**. Private raw driving logs, route identifiers, device/network identifiers, SSH information, personal paths, and sensitive provenance records are intentionally excluded.
 
@@ -220,8 +221,8 @@ shared closed-loop + scenario engine
 - [x] Deterministic scenario catalog
 - [x] Strict schema-v6 H1 evidence parsing / structural qualification
 - [x] Remove eGPU/integrated branches from the simulator's required path
-- [ ] Read-only inventory of the real comma and classify the existing H1 overlay
-- [ ] Capture real comma H1 evidence and validate controller replay fidelity
+- [x] Real comma read-only inventory / H1 overlay classification / latest-upstream offroad qualification
+- [ ] Capture a moving real-comma H1 route and validate controller replay fidelity
 - [ ] Complete Santa Fe longitudinal plant validation
 - [ ] Publish a sanitized real Carrot/openpilot controller bridge
 - [ ] Freeze a standard Vehicle Profile / Plugin format
