@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "historicalSourceCommit": "6383e0cda19f7d9bfeddb6a7732a6da764cca3da",
+  "historicalLiveBase": "ce3d76301c988db8aa955e1ebc6496f0a0fd2abc",
+  "h1SchemaVersion": 6,
+  "paths": [
+    {
+      "path": "openpilot/cereal/custom.capnp",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "openpilot/cereal/log.capnp",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "openpilot/cereal/services.py",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "openpilot/selfdrive/carrot/carrot_functions.py",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "openpilot/selfdrive/controls/lib/h1_observability.py",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "openpilot/selfdrive/controls/lib/longitudinal_planner.py",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "openpilot/selfdrive/controls/plannerd.py",
+      "classification": "REQUIRED"
+    },
+    {
+      "path": "opendbc_repo/opendbc/dbc/generator/hyundai/hyundai_canfd_radar.dbc",
+      "classification": "OPTIONAL_RADAR_DECODE"
+    }
+  ],
+  "explicitlyExcludedHistoricalPaths": [
+    ".github/workflows/egpu-integrated-ci.yml"
+  ]
+}
