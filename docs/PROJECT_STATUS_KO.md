@@ -24,6 +24,9 @@
 - openpilot H1 host-surface 읽기 전용 compatibility checker
 - eGPU/Guardian/model-slot/telemetry를 simulator H0/H1/H2 필수 경로에서 분리
 - 공개 개인정보 audit 및 Python 3.11/3.12 CI
+- README / architecture / H1 / current-status 문서 최신화
+- 완료된 `docs/superpowers` plan/spec 제거
+- 병합 완료 작업 브랜치 `codex/selective-public-20260907`, `feat/h1-evidence-v1` 제거
 
 ## 3. 아직 완료되지 않은 범위
 
@@ -96,7 +99,21 @@ eGPU는 과거 참고·연구 대상으로 분석된 이력이 있으나 현재 
 - live comma update prerequisite: 아님
 - 향후 별도 eGPU 연구가 명시적으로 필요해질 때만 독립 주제로 다룸
 
-## 7. 현재 기준 문서
+## 7. 현재 브랜치 정리 상태
+
+현재 유지 브랜치는 두 개입니다.
+
+- `main` — 현재 프로젝트 기준선
+- `review/followup-hardening` — PR #1의 미검증 hardening 후보 보존용
+
+`review/followup-hardening`은 `main`에 없는 고유 커밋이 남아 있고, plant/snapshot/duration 및 release-audit 관련 변경이 아직 별도 offline compatibility/revalidation을 필요로 하므로 삭제하지 않습니다.
+
+반대로 아래 두 브랜치는 정리 완료했습니다.
+
+- `codex/selective-public-20260907` — PR #2 merge 완료, 고유 미반영 커밋 없음
+- `feat/h1-evidence-v1` — PR #3 squash merge 완료, 최종 기능 트리가 `main`에 반영됨
+
+## 8. 현재 기준 문서
 
 프로젝트 상태를 판단할 때는 다음 순서로 문서를 봅니다.
 
@@ -106,4 +123,4 @@ eGPU는 과거 참고·연구 대상으로 분석된 이력이 있으나 현재 
 4. `docs/H1_OBSERVABILITY_KO.md` — H1 evidence 계약과 실차 observability 원칙
 5. `docs/VEHICLE_PLUGIN_GUIDE_KO.md` — 차량 확장 규칙
 
-구현이 끝난 과거 작업계획·agent용 plan/spec 문서는 현재 프로젝트 상태의 source of truth로 사용하지 않습니다.
+구현이 끝난 과거 작업계획·agent용 plan/spec 문서는 제거했으며 현재 프로젝트 상태의 source of truth로 사용하지 않습니다.
