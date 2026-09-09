@@ -3,6 +3,8 @@ import importlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -11,6 +13,8 @@ from carrot_sim.h1_evidence import H1EvidenceError
 
 RADAR_SHA = "55" * 32
 SNAPSHOT_SHA = "66" * 32
+ROOT = Path(__file__).resolve().parents[1]
+CLI = ROOT / "scripts" / "inspect_h1_evidence.py"
 
 
 def config_payload():
@@ -66,6 +70,15 @@ class TestH1Jsonl(unittest.TestCase):
     path.write_text("\n".join(rows) + "\n", encoding="utf-8")
     return td, path
 
+  def _run_cli(self, path):
+    return subprocess.run(
+      [sys.executable, str(CLI), str(path)],
+      cwd=ROOT,
+      capture_output=True,
+      text=True,
+      check=False,
+    )
+
   def test_loads_trace_and_verified_config_records(self):
     module = self._module()
     td, path = self._write([
@@ -118,6 +131,38 @@ class TestH1Jsonl(unittest.TestCase):
     self.addCleanup(td.cleanup)
     with self.assertRaisesRegex(H1EvidenceError, "config hash mismatch"):
       module.load_h1_jsonl(path)
+
+  def test_cli_returns_zero_and_ready_summary_for_complete_evidence(self):
+    td, path = self._write([
+      json.dumps({"type": "carrotH1ConfigSnapshot", "data": valid_config_dict()}),
+      json.dumps({"type": "carrotH1ReplayTrace", "data": valid_trace_dict()}),
+    ])
+    self.addCleanup(td.cleanup)
+    result = self._run_cli(path)
+    self.assertEqual(result.returncode, 0, result.stderr)
+    summary = json.loads(result.stdout)
+    self.assertEqual(summary["status"], "H1_READY")
+    self.assertEqual(summary["traceCount"], 1)
+    self.assertEqual(summary["plannerCycleCount"], 1)
+    self.assertEqual(summary["configCount"], 1)
+
+  def test_cli_returns_two_for_structurally_valid_hold(self):
+    td, path = self._write([])
+    self.addCleanup(td.cleanup)
+    result = self._run_cli(path)
+    self.assertEqual(result.returncode, 2, result.stderr)
+    summary = json.loads(result.stdout)
+    self.assertEqual(summary["status"], "H1_HOLD")
+    self.assertIn("NO_H1_TRACE", summary["reasons"])
+
+  def test_cli_returns_three_for_malformed_evidence(self):
+    td, path = self._write(["{not json}"])
+    self.addCleanup(td.cleanup)
+    result = self._run_cli(path)
+    self.assertEqual(result.returncode, 3)
+    summary = json.loads(result.stdout)
+    self.assertEqual(summary["status"], "H1_ERROR")
+    self.assertIn("line 1", summary["error"])
 
 
 if __name__ == "__main__":
