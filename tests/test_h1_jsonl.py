@@ -1,0 +1,124 @@
+import hashlib
+import importlib
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+from carrot_sim.h1_evidence import H1EvidenceError
+
+
+RADAR_SHA = "55" * 32
+SNAPSHOT_SHA = "66" * 32
+
+
+def config_payload():
+  return json.dumps(
+    {"appliedConfig": {"tFollowGap1": 1.1}, "rawParams": {}},
+    sort_keys=True,
+    separators=(",", ":"),
+    ensure_ascii=False,
+    allow_nan=False,
+  ).encode("utf-8")
+
+
+def valid_config_dict():
+  payload = config_payload()
+  return {
+    "schemaVersion": 6,
+    "processEpoch": 1000,
+    "configSequence": 1,
+    "configSha256": hashlib.sha256(payload).hexdigest(),
+    "canonicalJsonUtf8": payload.decode("utf-8"),
+  }
+
+
+def valid_trace_dict():
+  config_sha = valid_config_dict()["configSha256"]
+  return {
+    "schemaVersion": 6,
+    "processEpoch": 1000,
+    "loopSequence": 1,
+    "plannerCycle": 1,
+    "subMasterFrame": 10,
+    "planningTriggerKind": 0,
+    "planningTriggerLogMonoTime": 123456,
+    "configSequence": 1,
+    "configSha256": config_sha,
+    "radarInputKind": 0,
+    "effectiveRadarStateSha256": RADAR_SHA,
+    "consumedSnapshotIdentitySha256": SNAPSHOT_SHA,
+    "runLongitudinal": True,
+    "longitudinalPlanEmitted": True,
+  }
+
+
+class TestH1Jsonl(unittest.TestCase):
+  def _module(self):
+    spec = importlib.util.find_spec("carrot_sim.h1_jsonl")
+    self.assertIsNotNone(spec, "carrot_sim.h1_jsonl must exist")
+    return importlib.import_module("carrot_sim.h1_jsonl")
+
+  def _write(self, rows):
+    td = tempfile.TemporaryDirectory()
+    path = Path(td.name) / "h1.jsonl"
+    path.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    return td, path
+
+  def test_loads_trace_and_verified_config_records(self):
+    module = self._module()
+    td, path = self._write([
+      json.dumps({"type": "carrotH1ConfigSnapshot", "data": valid_config_dict()}),
+      json.dumps({"type": "carrotH1ReplayTrace", "data": valid_trace_dict()}),
+    ])
+    self.addCleanup(td.cleanup)
+    traces, configs = module.load_h1_jsonl(path)
+    self.assertEqual(len(traces), 1)
+    self.assertEqual(len(configs), 1)
+
+  def test_blank_lines_are_ignored(self):
+    module = self._module()
+    td, path = self._write([
+      "",
+      json.dumps({"type": "carrotH1ConfigSnapshot", "data": valid_config_dict()}),
+      "   ",
+      json.dumps({"type": "carrotH1ReplayTrace", "data": valid_trace_dict()}),
+    ])
+    self.addCleanup(td.cleanup)
+    traces, configs = module.load_h1_jsonl(path)
+    self.assertEqual((len(traces), len(configs)), (1, 1))
+
+  def test_malformed_json_reports_one_based_line_number(self):
+    module = self._module()
+    td, path = self._write(["", "{not json}"])
+    self.addCleanup(td.cleanup)
+    with self.assertRaisesRegex(H1EvidenceError, "line 2"):
+      module.load_h1_jsonl(path)
+
+  def test_unknown_record_type_is_rejected(self):
+    module = self._module()
+    td, path = self._write([json.dumps({"type": "other", "data": {}})])
+    self.addCleanup(td.cleanup)
+    with self.assertRaisesRegex(H1EvidenceError, "unknown H1 record type"):
+      module.load_h1_jsonl(path)
+
+  def test_missing_data_is_rejected(self):
+    module = self._module()
+    td, path = self._write([json.dumps({"type": "carrotH1ReplayTrace"})])
+    self.addCleanup(td.cleanup)
+    with self.assertRaisesRegex(H1EvidenceError, "missing data"):
+      module.load_h1_jsonl(path)
+
+  def test_invalid_config_hash_is_rejected_during_load(self):
+    module = self._module()
+    row = valid_config_dict()
+    row["configSha256"] = "00" * 32
+    td, path = self._write([json.dumps({"type": "carrotH1ConfigSnapshot", "data": row})])
+    self.addCleanup(td.cleanup)
+    with self.assertRaisesRegex(H1EvidenceError, "config hash mismatch"):
+      module.load_h1_jsonl(path)
+
+
+if __name__ == "__main__":
+  unittest.main()
