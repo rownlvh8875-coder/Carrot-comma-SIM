@@ -2,11 +2,17 @@
 
 기준일: 2026-09-10
 
+> 문서 역할과 최신/구조 문서 구분은 [`DOCUMENT_STATUS_KO.md`](DOCUMENT_STATUS_KO.md)를 먼저 참고합니다.
+
 ## 1. 프로젝트 목적
 
 `Carrot-comma-SIM`은 Carrot/openpilot 계열 제어기를 실제 차량 없이 반복 재생·검증하고, 차량 반응 모델과 결합해 폐루프 시뮬레이션까지 확장하기 위한 독립 시뮬레이터 프로젝트입니다.
 
 실차 주행 소프트웨어 자체를 별도 포크 제품으로 유지하는 것이 목적이 아닙니다. 실차의 authoritative control source는 `ajouatom/openpilot:carrot-wip`이며, 이 저장소는 그 제어 결과를 재현·분석·회귀검증하는 쪽을 담당합니다.
+
+### Reference Vehicle identity 주의
+
+공개 문서의 `HYUNDAI_SANTA_FE_2022`는 openpilot/시뮬레이터에서 사용하는 **software reference identity**입니다. 이 식별자만으로 비공개 실제 시험차의 등록연식·세부 트림을 추정하지 않습니다. 실제 차량 identity와 현재 `CarParams`/fingerprint는 private H0 evidence에서 별도로 관리·검증합니다.
 
 ## 2. 현재 완료된 범위
 
@@ -132,13 +138,14 @@ eGPU는 과거 참고·연구 대상으로 분석된 이력이 있으나 현재 
 
 프로젝트 상태를 판단할 때는 다음 순서로 문서를 봅니다.
 
-1. `README.md` — 전체 프로젝트 개요와 로드맵
-2. `docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md` — 차량세팅 입력부터 결과/비교까지의 쉬운 설명
-3. `docs/PROJECT_STATUS_KO.md` — 현재 완료/미완료/다음 작업
-4. `docs/ARCHITECTURE_KO.md` — 구조와 책임 경계
-5. `docs/H1_OBSERVABILITY_KO.md` — H1 evidence 계약과 실차 observability 원칙
-6. `docs/SCORING_AND_TUNING_KO.md` — 안전 관련 성능·승차감·추종성 및 파라미터 추천 기준
-7. `docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md` — 공개 core / 비공개 evidence·튜닝 계층 운영정책
-8. `docs/VEHICLE_PLUGIN_GUIDE_KO.md` — 차량 확장 규칙
+1. [`docs/DOCUMENT_STATUS_KO.md`](DOCUMENT_STATUS_KO.md) — 문서 역할·최신성 인덱스
+2. [`README.md`](../README.md) — 전체 프로젝트 개요와 로드맵
+3. [`docs/PROJECT_STATUS_KO.md`](PROJECT_STATUS_KO.md) — 현재 완료/미완료/다음 작업
+4. [`docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md`](HOW_SIMULATION_OUTPUT_WORKS_KO.md) — 차량세팅 입력부터 결과/비교까지의 쉬운 설명
+5. [`docs/ARCHITECTURE_KO.md`](ARCHITECTURE_KO.md) — 구조와 책임 경계
+6. [`docs/H1_OBSERVABILITY_KO.md`](H1_OBSERVABILITY_KO.md) — H1 evidence 계약과 실차 observability 원칙
+7. [`docs/SCORING_AND_TUNING_KO.md`](SCORING_AND_TUNING_KO.md) — 안전 관련 성능·승차감·추종성 및 파라미터 추천 기준
+8. [`docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md`](PUBLIC_PRIVATE_REPO_POLICY_KO.md) — 공개 core / 비공개 evidence·튜닝 계층 운영정책
+9. [`docs/VEHICLE_PLUGIN_GUIDE_KO.md`](VEHICLE_PLUGIN_GUIDE_KO.md) — 차량 확장 규칙
 
 구현이 끝난 과거 작업계획·agent용 plan/spec 문서는 제거했으며 현재 프로젝트 상태의 source of truth로 사용하지 않습니다.
