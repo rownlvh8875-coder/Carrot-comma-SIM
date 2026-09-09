@@ -19,6 +19,12 @@ class TestOpenpilotOverlayCompatibility(unittest.TestCase):
       path.write_text("\n".join(anchors) + "\n", encoding="utf-8")
     return td, root
 
+  def test_carrot_plannerd_anchor_is_main_not_generic_plannerd_thread(self):
+    self.assertEqual(
+      UPSTREAM_HOST_ANCHORS["openpilot/selfdrive/controls/plannerd.py"],
+      ("def main():",),
+    )
+
   def test_valid_host_surface_is_compatible(self):
     td, root = self._fixture()
     self.addCleanup(td.cleanup)
