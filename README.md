@@ -3,7 +3,7 @@
 > **Carrot/openpilot 계열 제어기를 실제 차량 없이 반복 시험하기 위한 범용 폐루프(Closed-loop) 차량 시뮬레이터 연구 프로젝트**  
 > 첫 번째 Reference Vehicle은 `HYUNDAI_SANTA_FE_2022`입니다.
 
-[한국어](README.md) · [English](README_EN.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md) · [시뮬레이션 결과는 어떻게 나오는가?](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md)
 
 ---
 
@@ -31,6 +31,28 @@ Carrot / openpilot Controller
 ```
 
 이를 **폐루프(Closed-loop)**라고 합니다. 제어기의 출력이 차량 상태를 바꾸고, 바뀐 차량 상태가 다시 제어기의 다음 입력이 되는 구조입니다.
+
+### 실제로 어떤 결과가 나오는가?
+
+```text
+현재 차량/Carrot 세팅 + 주행 시나리오
+             ↓
+      Carrot Controller 판단
+             ↓
+   가속/감속/조향 제어명령
+             ↓
+       Vehicle Plant 반응
+             ↓
+ 속도·차간거리·가속도·조향 등 시간축 결과
+             ↓
+ Safety-related performance / Comfort / Tracking
+             ↓
+      현재 세팅 vs 후보 세팅 비교
+```
+
+예를 들어 80 km/h에서 앞차가 급감속하면, **Carrot이 언제 얼마만큼 감속을 요청했는지**, **차량 모델이 실제로 얼마의 지연과 감속으로 반응했는지**, 그 결과 **최소 차간거리·TTC·jerk·추종오차가 어떻게 변했는지**를 비교합니다. 최종 결과는 추천값 하나가 아니라 원시 지표, 그래프, worst-case와 trade-off까지 보여주는 것이 목표입니다.
+
+자세한 설명과 결과표 예시는 [`docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md`](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md)를 참고합니다. 문서의 숫자는 구조 설명용 예시이며 실제 차량 검증값이 아닙니다.
 
 ---
 
