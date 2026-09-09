@@ -41,19 +41,28 @@ Carrot-comma-SIM
 
 ### `carrotH1ReplayTrace`
 
-planner main-loop 단위로 다음과 같은 재현 경계를 보존합니다.
+historical schema-v6의 **54개 필드를 모두 요구**합니다. planner main-loop 단위로 다음 재현 경계를 보존합니다.
 
-- `processEpoch`
-- `loopSequence`
-- `plannerCycle`
-- `subMasterFrame`
-- planning trigger 종류와 `logMonoTime`
-- 실제 수신 메시지 identity에 연결되는 상태
-- `configSequence`와 `configSha256`
-- effective radar input 종류와 SHA256 identity
-- `runLongitudinal`
-- `longitudinalPlanEmitted`
-- consumed snapshot identity
+- `processEpoch`, `loopSequence`, `plannerCycle`, `subMasterFrame`
+- `captureMonoTimeNs`, `decisionMonoTimeNs`
+- `planningTriggerKind`, `planningTriggerLogMonoTime`
+- 9개 service(`modelV2`, `liveTracks`, `carControl`, `carState`, `controlsState`, `liveParameters`, `radarState`, `selfdriveState`, `carrotMan`) 각각의 `logMonoTime`, `recvFrame`, `recvTimeNs`
+- `seenMask`, `updatedMask`, `aliveMask`, `freqOkMask`, `validMask`
+- `configSequence`, `configSha256`
+- `radarInputKind`, `fastLeadMask`, `fastLeadTrackId`, `fastLeadReason`, `effectiveRadarStateSha256`
+- `runLongitudinal`, `longitudinalPlanEmitted`, `liveTracksRecent`, `useLiveTracksTrigger`, `triggerIntervalOk`
+- `consumedSnapshotIdentitySha256`
+
+시뮬레이터는 `consumedSnapshotIdentitySha256`를 그대로 신뢰하지 않습니다. historical `h1_observability.py`와 동일하게 위 loop identity payload를 canonical JSON으로 직렬화하고 SHA256을 다시 계산해 기록값과 정확히 비교합니다.
+
+또한 historical `plannerd.py`의 실제 생성 규칙과 다음 의미 일관성을 검사합니다.
+
+- `useLiveTracksTrigger=false`이면 planning trigger는 `modelV2`, `true`이면 `liveTracks`
+- `planningTriggerLogMonoTime`은 선택된 trigger service의 실제 `logMonoTime`과 같아야 함
+- `runLongitudinal=true`이면 `triggerIntervalOk=true`
+- `longitudinalPlanEmitted=true`이면 `runLongitudinal=true`
+- emitted cycle의 `radarInputKind`는 trigger 경로와 일치해야 함
+- non-emitted cycle은 `radarInputKind=2`이고 effective radar SHA가 비어 있어야 함
 
 ### `carrotH1ConfigSnapshot`
 
@@ -69,7 +78,9 @@ planner main-loop 단위로 다음과 같은 재현 경계를 보존합니다.
 
 현재 검사 항목에는 다음이 포함됩니다.
 
-- schema version 6
+- schema version 6 및 54-field trace completeness
+- historical snapshot identity SHA256 재계산 일치
+- trigger/radar/run 의미 일관성
 - loop sequence 연속성
 - 동일 process epoch
 - planner cycle 전이 일관성
@@ -90,7 +101,7 @@ planner main-loop 단위로 다음과 같은 재현 경계를 보존합니다.
 
 ## 5. `H1_HOLD`의 의미
 
-증거가 부족하거나 연결이 불확실하면 값을 추측하지 않고 `H1_HOLD`로 둡니다.
+증거가 부족하거나 evidence set 간 연결이 불확실하면 값을 추측하지 않고 `H1_HOLD`로 둡니다.
 
 예시 HOLD 사유:
 
@@ -107,11 +118,15 @@ planner main-loop 단위로 다음과 같은 재현 경계를 보존합니다.
 
 ## 6. `H1_ERROR`
 
-다음과 같이 evidence 자체가 계약을 위반하면 구조적 HOLD와 구분해 `H1_ERROR`로 처리합니다.
+다음과 같이 개별 evidence 자체가 계약을 위반하면 구조적 HOLD와 구분해 `H1_ERROR`로 처리합니다.
 
 - malformed JSON
 - 지원하지 않는 schema version
+- schema-v6 필수 필드 누락 또는 정수 범위 위반
 - 잘못된 SHA256 형식
+- `consumedSnapshotIdentitySha256` 재계산 불일치
+- planning trigger kind/timestamp 불일치
+- emitted/non-emitted radar/run 의미 불일치
 - config payload/hash 불일치
 - non-canonical config JSON
 - 알 수 없는 record type
