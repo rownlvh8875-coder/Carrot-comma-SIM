@@ -3,7 +3,7 @@
 > **A multi-vehicle closed-loop simulator research project for testing Carrot/openpilot-family controllers without repeatedly driving the real vehicle.**  
 > The first reference vehicle is `HYUNDAI_SANTA_FE_2022`.
 
-[한국어](README.md) · [English](README_EN.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
 
 ## What this project is
 
@@ -54,7 +54,7 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 | Deterministic scenario catalog | implemented |
 | H1 evidence structural validation | implemented: complete schema-v6 trace, config SHA, snapshot identity, and trigger/radar semantics |
 | Real H1 controller replay fidelity | pending real comma evidence |
-| Automatic parameter tuning | not authorized |
+| Parameter candidate scoring/recommendation | contract documented; no automatic real-vehicle parameter write |
 | Real-vehicle writes | disabled / not part of this public core |
 
 `H1_READY` means the evidence is structurally sufficient to begin deterministic controller-replay research. It does **not** mean controller outputs have already been reproduced, that the vehicle plant is validated, or that real-road safety has been established. See [`docs/H1_OBSERVABILITY_KO.md`](docs/H1_OBSERVABILITY_KO.md) for the current evidence contract.
