@@ -2,7 +2,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from carrot_sim.openpilot_overlay_compat import UPSTREAM_HOST_ANCHORS, inspect_openpilot_overlay_source
+from carrot_sim.openpilot_overlay_compat import (
+  UPSTREAM_HOST_ANCHORS,
+  classify_rebase_result,
+  inspect_openpilot_overlay_source,
+)
 
 
 class TestOpenpilotOverlayCompatibility(unittest.TestCase):
@@ -49,6 +53,33 @@ class TestOpenpilotOverlayCompatibility(unittest.TestCase):
     native.write_text("# upstream-owned implementation\n", encoding="utf-8")
     result = inspect_openpilot_overlay_source(root)
     self.assertEqual(result.status, "COMPATIBLE")
+
+  def test_compatible_source_without_overlay_conflicts_uses_fast_path(self):
+    self.assertEqual(
+      classify_rebase_result("COMPATIBLE", conflicts=()),
+      "FAST_COMPATIBILITY_PATH",
+    )
+
+  def test_any_overlay_conflict_requires_revalidation(self):
+    self.assertEqual(
+      classify_rebase_result(
+        "COMPATIBLE",
+        conflicts=("openpilot/selfdrive/controls/plannerd.py",),
+      ),
+      "REVALIDATION_REQUIRED",
+    )
+
+  def test_source_review_status_requires_revalidation(self):
+    self.assertEqual(
+      classify_rebase_result("REVIEW_REQUIRED", conflicts=()),
+      "REVALIDATION_REQUIRED",
+    )
+
+  def test_invalid_source_requires_revalidation(self):
+    self.assertEqual(
+      classify_rebase_result("INVALID_SOURCE", conflicts=()),
+      "REVALIDATION_REQUIRED",
+    )
 
 
 if __name__ == "__main__":
