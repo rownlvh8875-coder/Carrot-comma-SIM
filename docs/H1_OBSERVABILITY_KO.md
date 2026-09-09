@@ -33,6 +33,24 @@ Carrot-comma-SIM
 - Carrot-comma-SIM은 실차 제어값이나 Params를 쓰지 않습니다.
 - eGPU/Guardian/model-slot/telemetry/shadow commissioning은 H1 필수 경로가 아닙니다.
 
+### live comma에 허용되는 최소 변경
+
+- H1 replay trace/config snapshot 메시지 정의와 service 등록
+- 작은 `H1Observability` helper
+- planner가 실제 소비한 입력/config/trigger를 기록하기 위한 최소 hook
+- replay decode에 실제로 필요할 때만 Hyundai radar DBC 보완
+- observability ON/OFF 및 강제 실패 시 control-relevant output이 동일함을 검증하는 테스트/진단
+
+### live comma에서 이 프로젝트가 유지하지 않는 변경
+
+- eGPU integration, BIG/SMALL model commissioning, Guardian, eGPU telemetry, model-slot activation, shadow runner
+- steering/braking/acceleration policy 변경
+- Panda safety 또는 actuator limit 변경
+- 별도의 Carrot 제어 알고리즘 포크
+- simulator 편의를 위해 실차 주행 결정을 바꾸는 코드
+
+관측 코드의 실패는 **fail-open for driving**이어야 합니다. 즉 trace/config 직렬화·publish 실패가 제어 루프의 판단, steering, braking, acceleration authority를 바꾸거나 프로세스를 종료시키면 안 됩니다.
+
 ## 3. 현재 H1 스키마
 
 현재 지원하는 H1 observability schema version은 **6**입니다.
@@ -190,6 +208,8 @@ host surface drift 또는 overlay conflict
 
 이 판정은 **관측 패치를 다시 검토해야 하는지**만 나타냅니다. 최신 Carrot 주행 기능의 안전성 승인 결과가 아닙니다.
 
+업스트림에 eGPU 관련 파일이 존재하더라도 그것만으로 incompatibility로 판정하지 않습니다. 검사 범위는 오직 H1 overlay가 의존하는 host surface입니다.
+
 ## 9. 실차 적용 원칙
 
 실제 comma에는 먼저 현재 `/data/openpilot` 상태를 read-only로 기록합니다.
@@ -210,9 +230,21 @@ UNRELATED
 REMOVE
 ```
 
-분류가 끝나기 전에는 기존 파일을 삭제하거나 `reset --hard`하지 않습니다.
+분류가 끝나기 전에는 기존 파일을 삭제하거나 `reset --hard`하지 않습니다. 또한 local diff의 recoverable copy가 확보되기 전에는 무조건적인 `git pull`도 하지 않습니다.
 
 최종 overlay는 eGPU integration branch에서 코드를 빼내는 방식이 아니라 **그 시점의 최신 upstream `carrot-wip` 위에 필요한 H1 계측만 다시 적용하는 방식**을 사용합니다.
+
+실차 검증 순서는 다음을 권장합니다.
+
+```text
+Gate A: live source inventory / backup
+Gate B: 최소 observer extraction, eGPU dependency = 0
+Gate C: observer OFF/ON 및 forced-failure control equivalence
+Gate D: simulator H1 evidence ingestion
+Gate E: comma offroad boot / service / logging 확인
+```
+
+Gate E 전에는 새 관측 패치를 정상 실주행 검증 완료로 취급하지 않습니다.
 
 ## 10. 현재 검증 경계
 
