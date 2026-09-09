@@ -159,7 +159,9 @@ Carrot-WIP 업데이트 자체를 이 프로젝트가 승인하거나 차단하�
 - `services.py`
 - `CarrotPlanner`
 - `LongitudinalPlanner`
-- `plannerd_thread`
+- Carrot `plannerd.py`의 `main()` loop
+
+`plannerd.py`의 관측 hook은 generic openpilot의 다른 구조를 가정하지 않고 실제 Carrot 소스의 `main()`을 기준으로 합니다. 이 형태는 historical live base `ce3d7630...`과 2026-09-09 확인한 upstream `dcce955c...`에서 모두 확인되었습니다.
 
 판정:
 
