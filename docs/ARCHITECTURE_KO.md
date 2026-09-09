@@ -1,5 +1,7 @@
 # 아키텍처 설명 — 범용 Carrot/openpilot 폐루프 시뮬레이터
 
+> 문서 역할과 최신 상태는 [`DOCUMENT_STATUS_KO.md`](DOCUMENT_STATUS_KO.md)를 참고합니다. 이 문서에서 `HYUNDAI_SANTA_FE_2022`는 **software reference identity**이며 비공개 실제 시험차의 등록연식을 뜻하지 않습니다.
+
 ## 1. 핵심 설계 원칙
 
 이 프로젝트는 세 가지를 강하게 분리합니다.
@@ -154,13 +156,15 @@ CombinedVehiclePlant
 
 ## 8. 왜 `CombinedSantaFePlant`를 따로 유지하는가?
 
-싼타페는 이 프로젝트의 첫 reference vehicle입니다.
+싼타페 software reference는 이 프로젝트의 첫 reference vehicle입니다.
 
 그래서 `CombinedSantaFePlant`는 다음을 보장합니다.
 
 ```text
 metadata.vehicle == HYUNDAI_SANTA_FE_2022
 ```
+
+이 값은 소프트웨어 reference identity입니다. 실제 시험차의 등록연식·세부 트림은 private H0 evidence에서 별도로 확인합니다.
 
 다른 차량 metadata를 실수로 넣으면 즉시 실패합니다.
 
