@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -132,3 +134,24 @@ def parse_config_snapshot(row: dict[str, Any]) -> H1ConfigSnapshot:
     config_sha256=_sha_field(row, "configSha256"),
     canonical_json_utf8=payload_bytes,
   )
+
+
+def verify_config_snapshot(snapshot: H1ConfigSnapshot) -> None:
+  digest = hashlib.sha256(snapshot.canonical_json_utf8).hexdigest()
+  if digest != snapshot.config_sha256:
+    raise H1EvidenceError("config hash mismatch")
+
+  try:
+    decoded = json.loads(snapshot.canonical_json_utf8.decode("utf-8"))
+    canonical = json.dumps(
+      decoded,
+      sort_keys=True,
+      separators=(",", ":"),
+      ensure_ascii=False,
+      allow_nan=False,
+    ).encode("utf-8")
+  except (UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError) as exc:
+    raise H1EvidenceError("invalid config canonical JSON") from exc
+
+  if canonical != snapshot.canonical_json_utf8:
+    raise H1EvidenceError("config payload is not canonical JSON")
