@@ -22,9 +22,44 @@ Controller  ≠  Vehicle Plant  ≠  World
 
 구분할 수 있어야 합니다.
 
+## 2. 저장소와 실차의 책임 경계
+
+아키텍처는 코드 계층뿐 아니라 저장소 역할도 분리합니다.
+
+```text
+ajouatom/openpilot:carrot-wip
+  authoritative live control
+          │
+          │ rlog/qlog + 최소 H1 observability evidence
+          ▼
+Carrot-comma-SIM
+  H0 provenance
+  H1 controller replay
+  H2 vehicle plant
+  closed-loop / regression
+```
+
+### `ajouatom/openpilot:carrot-wip`
+
+- 실차에서 주행 판단을 담당하는 upstream입니다.
+- 이 시뮬레이터는 upstream의 일반 업데이트를 별도 승인·차단하지 않습니다.
+- Carrot 제어 정책을 이 프로젝트가 장기 포크로 유지하지 않습니다.
+
+### live comma `/data/openpilot`
+
+- 정상 `carrot-wip`을 사용합니다.
+- 일반 로그에 부족한 H1 재현 증거만 최소 observability overlay로 기록할 수 있습니다.
+- 그 overlay는 제어 정책, Panda safety, actuator authority를 변경하지 않습니다.
+
+### `Carrot-comma-SIM`
+
+- 실제 제어를 소유하지 않습니다.
+- 기록된 증거를 ingest하고 재현·모델링·시나리오 회귀검증을 수행합니다.
+- eGPU/Guardian/model-slot/telemetry는 이 아키텍처의 필수 구성요소가 아닙니다.
+
 ---
 
-## 2. 폐루프 구조
+## 3. 폐루프 구조
 
 ```text
 ┌───────────────────────────┐
@@ -52,7 +87,7 @@ Controller  ≠  Vehicle Plant  ≠  World
 
 ---
 
-## 3. `PlantControl`
+## 4. `PlantControl`
 
 Controller가 Vehicle Plant에 넘기는 최소 명령입니다.
 
@@ -67,7 +102,7 @@ Controller가 Vehicle Plant에 넘기는 최소 명령입니다.
 
 ---
 
-## 4. `VehicleState`
+## 5. `VehicleState`
 
 Vehicle Plant가 계산한 ego 차량 상태입니다.
 
@@ -85,7 +120,7 @@ Vehicle Plant가 계산한 ego 차량 상태입니다.
 
 ---
 
-## 5. `WorldObservation`
+## 6. `WorldObservation`
 
 WorldBackend가 Controller/Plant에 제공하는 외생(exogenous) 환경 정보입니다.
 
@@ -103,7 +138,7 @@ WorldBackend가 Controller/Plant에 제공하는 외생(exogenous) 환경 정보
 
 ---
 
-## 6. `CombinedVehiclePlant`
+## 7. `CombinedVehiclePlant`
 
 차량별 Lateral / Longitudinal 모델을 조립하는 공통 코어입니다.
 
@@ -117,7 +152,7 @@ CombinedVehiclePlant
 
 ---
 
-## 7. 왜 `CombinedSantaFePlant`를 따로 유지하는가?
+## 8. 왜 `CombinedSantaFePlant`를 따로 유지하는가?
 
 싼타페는 이 프로젝트의 첫 reference vehicle입니다.
 
@@ -133,7 +168,7 @@ metadata.vehicle == HYUNDAI_SANTA_FE_2022
 
 ---
 
-## 8. Validated Domain
+## 9. Validated Domain
 
 Vehicle Plant는 아무 속도/명령에서나 정확하다고 가정하지 않습니다.
 
@@ -153,7 +188,7 @@ Vehicle Plant는 아무 속도/명령에서나 정확하다고 가정하지 않�
 
 ---
 
-## 9. Teacher Force
+## 10. Teacher Force
 
 특정 연구에서는 검증 범위를 벗어난 구간을 실제 기록 상태로 강제 연결하는 diagnostic이 필요할 수 있습니다.
 
@@ -163,7 +198,7 @@ Vehicle Plant는 아무 속도/명령에서나 정확하다고 가정하지 않�
 
 ---
 
-## 10. Synthetic scenario의 역할
+## 11. Synthetic scenario의 역할
 
 Synthetic world는 다음에 유용합니다.
 
@@ -185,7 +220,7 @@ Real-road acceptance evidence
 
 ---
 
-## 11. 장기 구조
+## 12. 장기 구조
 
 ```text
 Controller Adapters
