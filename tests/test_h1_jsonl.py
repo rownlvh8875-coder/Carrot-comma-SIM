@@ -13,6 +13,10 @@ from carrot_sim.h1_evidence import H1EvidenceError
 
 RADAR_SHA = "55" * 32
 SNAPSHOT_SHA = "66" * 32
+SERVICES = (
+  "modelV2", "liveTracks", "carControl", "carState", "controlsState",
+  "liveParameters", "radarState", "selfdriveState", "carrotMan",
+)
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "scripts" / "inspect_h1_evidence.py"
 
@@ -40,22 +44,40 @@ def valid_config_dict():
 
 def valid_trace_dict():
   config_sha = valid_config_dict()["configSha256"]
-  return {
+  row = {
     "schemaVersion": 6,
     "processEpoch": 1000,
-    "loopSequence": 1,
     "plannerCycle": 1,
     "subMasterFrame": 10,
     "planningTriggerKind": 0,
     "planningTriggerLogMonoTime": 123456,
     "configSequence": 1,
     "configSha256": config_sha,
+    "updatedMask": 0x1FF,
+    "aliveMask": 0x1FF,
+    "freqOkMask": 0x1FF,
+    "validMask": 0x1FF,
     "radarInputKind": 0,
+    "fastLeadMask": 1,
+    "fastLeadTrackId": 7,
+    "fastLeadReason": 1,
     "effectiveRadarStateSha256": RADAR_SHA,
-    "consumedSnapshotIdentitySha256": SNAPSHOT_SHA,
-    "runLongitudinal": True,
+    "loopSequence": 1,
+    "captureMonoTimeNs": 123400,
+    "decisionMonoTimeNs": 123500,
+    "seenMask": 0x1FF,
     "longitudinalPlanEmitted": True,
+    "runLongitudinal": True,
+    "liveTracksRecent": True,
+    "useLiveTracksTrigger": False,
+    "triggerIntervalOk": True,
+    "consumedSnapshotIdentitySha256": SNAPSHOT_SHA,
   }
+  for index, service in enumerate(SERVICES):
+    row[f"{service}LogMonoTime"] = 1000 + index
+    row[f"{service}RecvFrame"] = 2000 + index
+    row[f"{service}RecvTimeNs"] = 3000 + index
+  return row
 
 
 class TestH1Jsonl(unittest.TestCase):
