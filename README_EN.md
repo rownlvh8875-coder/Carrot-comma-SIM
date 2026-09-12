@@ -69,7 +69,7 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 | Deterministic scenario catalog | implemented |
 | H1 evidence structural validation | implemented: complete schema-v6 trace, config SHA, snapshot identity, and trigger/radar semantics |
 | Real comma inventory / H1 overlay offroad qualification | completed: backup, latest upstream synchronization, minimal overlay reapply, build/reboot/runtime-schema checks |
-| Real H1 controller replay fidelity | pending a new moving schema-v6 route |
+| Real H1 controller replay fidelity | bounded moving proof established in private real-world evidence; robust acceptance remains prospective |
 | Parameter candidate scoring/recommendation | contract documented; no automatic real-vehicle parameter write |
 | Real-vehicle writes | disabled / not part of this public core |
 
@@ -79,21 +79,23 @@ A new vehicle should bring its own evidence-bound lateral and longitudinal respo
 
 The real comma inventory, recoverable backup, latest `carrot-wip` synchronization, minimal H1 observability overlay reapply, offroad build, reboot, and runtime schema checks are complete. Device identifiers, network details, and personal paths remain private.
 
-The next empirical gate is a **vehicle-connected moving schema-v6 route**:
+The next empirical gate is **prospective robust H1 acceptance**, not post-hoc route selection:
 
 ```text
-connect the vehicle and confirm stationary state
+bounded moving replay proof
         ↓
-confirm CarParams / fingerprint / real plannerd startup
+precommit the robust H1 acceptance contract
         ↓
-confirm carrotH1ReplayTrace + carrotH1ConfigSnapshot activity
+development route A
         ↓
-capture a short moving route
+development route B
         ↓
-validate trace/config continuity and provenance
+after both pass, one separately authorized sealed holdout replay
         ↓
-validate controller output replay fidelity
+only robust H1 PASS can make a separate H2 evidence-qualification review eligible
 ```
+
+The generalized method is documented in [`docs/H1_ROBUST_ACCEPTANCE_KO.md`](docs/H1_ROBUST_ACCEPTANCE_KO.md).
 
 There is no reason to perform repeated unconditional pulls on the live comma at this point. Future upstream changes should first be classified for simulator/observer compatibility while preserving the minimal H1 overlay.
 
@@ -104,7 +106,7 @@ This is a **sanitized public research release**. Private raw driving logs, route
 The project separates evidence into stages instead of tuning first and explaining later.
 
 - **H0 — data identity/provenance:** prove which vehicle, code and configuration produced the evidence.
-- **H1 — controller replay fidelity:** check whether the historical controller output can be reproduced from the corresponding inputs. The public core now validates whether normalized schema-v6 H1 evidence is structurally complete and internally consistent; actual replay fidelity remains a separate real-evidence step.
+- **H1 — controller replay fidelity:** check whether the historical controller output can be reproduced from the corresponding inputs. The public core validates whether normalized schema-v6 H1 evidence is structurally complete and internally consistent. A bounded moving replay proof now exists in the private evidence layer, while robust acceptance remains a separate prospective development/development/sealed-holdout step.
 - **H2 — vehicle-response identification:** model how the real vehicle responds to controller commands.
 
 ```text
@@ -225,7 +227,8 @@ shared closed-loop + scenario engine
 - [x] Strict schema-v6 H1 evidence parsing / structural qualification
 - [x] Remove eGPU/integrated branches from the simulator's required path
 - [x] Real comma read-only inventory / H1 overlay classification / latest-upstream offroad qualification
-- [ ] Capture a moving real-comma H1 route and validate controller replay fidelity
+- [x] Establish a bounded moving real-comma H1 replay proof in the private evidence layer
+- [ ] Complete prospective development A/B plus sealed-holdout robust H1 acceptance
 - [ ] Complete Santa Fe longitudinal plant validation
 - [ ] Publish a sanitized real Carrot/openpilot controller bridge
 - [ ] Freeze a standard Vehicle Profile / Plugin format

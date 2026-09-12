@@ -11,6 +11,7 @@
 1. [`README.md`](../README.md) — 프로젝트 목적, 현재 공개 상태, 로드맵
 2. [`PROJECT_STATUS_KO.md`](PROJECT_STATUS_KO.md) — 현재 구현/미완료 범위와 다음 게이트
 3. [`H1_OBSERVABILITY_KO.md`](H1_OBSERVABILITY_KO.md) — H1 evidence 계약
+4. [`H1_ROBUST_ACCEPTANCE_KO.md`](H1_ROBUST_ACCEPTANCE_KO.md) — bounded replay 이후 robust H1 acceptance 방법
 4. [`HOW_SIMULATION_OUTPUT_WORKS_KO.md`](HOW_SIMULATION_OUTPUT_WORKS_KO.md) — 설정 → 제어명령 → Plant → 결과 흐름
 
 ## 구조와 정책을 볼 때
@@ -29,7 +30,8 @@
 
 - 실제 comma read-only inventory와 offroad H1 host 검증은 수행됐다는 **일반화된 상태만** 공개합니다.
 - 실제 장치 주소, hostname, 개인 경로, real settings, rlog/qlog, route provenance는 공개하지 않습니다.
-- `H1_READY`는 구조적 evidence 준비 상태이며 moving-route controller replay fidelity 또는 실도로 안전성 증명이 아닙니다.
+- `H1_READY`는 구조적 evidence 준비 상태입니다. Private evidence의 bounded moving replay PASS도 robust H1 전체 PASS나 실도로 안전성 증명이 아닙니다.
+- robust H1은 prospective development A/B + sealed holdout 방식으로 별도 검증합니다.
 - 공개 simulator는 실제 차량 Params나 제어값을 자동으로 쓰지 않습니다.
 
 문서 간 설명이 충돌할 경우 이 인덱스보다 `README.md`와 `PROJECT_STATUS_KO.md`의 더 최근 기준일을 우선합니다.

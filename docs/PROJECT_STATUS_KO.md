@@ -43,18 +43,19 @@
 
 ## 3. 아직 완료되지 않은 범위
 
-현재 `H1_READY`는 evidence 구조와 무결성이 controller replay를 시작할 만큼 충분하다는 뜻입니다. 다음 항목은 아직 실증 완료가 아닙니다.
+현재 `H1_READY`는 evidence 구조와 무결성이 controller replay를 시작할 만큼 충분하다는 뜻입니다. Private real-world evidence에서는 새 moving schema-v6 bounded window의 controller output replay 일치까지 확인됐습니다. 아직 남은 실증은 **prospective robust H1 acceptance**입니다.
 
-- 차량 연결 후 새 moving schema-v6 H1 observability evidence 확보
-- 실제 route 기반 controller output equality / replay fidelity 검증
+- development A route exact replay
+- development B route exact replay
+- 두 development PASS 후 별도 승인된 sealed holdout 1회 replay
 - Santa Fe longitudinal Vehicle Plant의 최종 검증
 - 실제 Carrot/openpilot controller bridge의 공개판 정리
 - 차량별 표준 Vehicle Profile / Plugin 포맷 확정
 - 두 번째 차량에서 전체 방법론 재현
 
-## 4. 다음 작업 — 차량 연결 후
+## 4. 다음 작업 — robust H1 acceptance
 
-실제 comma의 read-only inventory와 offroad 업데이트/검증은 완료했습니다. 다음 단계는 **차량에 연결한 상태에서 실주행 H1 evidence를 확보하는 것**입니다.
+실제 comma의 read-only inventory/offroad 검증과 private bounded moving H1 replay proof까지 완료했습니다. 다음 단계는 결과 확인 전에 역할을 고정한 **development A / development B / sealed holdout** 검증입니다.
 
 현재 일반화된 상태:
 
@@ -63,27 +64,29 @@ upstream carrot-wip 최신 기준선 = 동기화 완료
 최소 H1 observability overlay   = 유지
 offroad build / reboot          = PASS
 runtime H1 schema               = PASS
-실차 moving H1 evidence         = 아직 없음
-controller replay fidelity      = 아직 미검증
+실차 moving H1 evidence         = bounded proof 확보
+controller replay fidelity      = bounded PASS / robust acceptance pending
 real vehicle write              = false
 ```
 
 다음 순서:
 
 ```text
-차량 연결
+bounded moving replay proof
   ↓
-정차 상태에서 CarParams / fingerprint / plannerd 확인
+prospective robust H1 contract
   ↓
-H1 trace/config 실제 발행 확인
+development A exact replay
   ↓
-짧은 moving route 수집
+development B exact replay
   ↓
-trace/config/Params 연속성 및 provenance 검사
+개발 2개 PASS 후 sealed holdout 별도 1회 검증
   ↓
-controller output equality / replay fidelity 검증
+robust H1 PASS
   ↓
-H1이 충분할 때만 H2 longitudinal Plant 검증으로 이동
+별도 H2 evidence qualification review
+  ↓
+H2가 승인된 뒤에만 longitudinal Plant 식별/검증
 ```
 
 upstream이 다시 바뀌기 전까지 live comma에서 반복적인 무조건 `git pull`은 필요하지 않습니다. 이후 업데이트는 H1 overlay 보존과 compatibility 확인을 전제로 처리합니다.

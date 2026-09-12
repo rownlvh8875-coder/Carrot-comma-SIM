@@ -96,7 +96,7 @@ CombinedVehiclePlant          ← 공통 코어
 | 시나리오 카탈로그 | ✅ 구현 | 노출도·중요도·복잡도·커버리지 기준의 결정론적 우선순위 |
 | H1 evidence 구조 검증 | ✅ 구현 | schema-v6 전체 trace, config SHA, snapshot identity, trigger/radar 의미 일관성을 fail-closed 검증 |
 | 실제 comma inventory / H1 overlay offroad 검증 | ✅ 완료 | 최신 `carrot-wip` 기준 최소 observability overlay를 백업·재적용하고 build/reboot/runtime schema 검증 완료 |
-| 실제 H1 replay fidelity | 🚧 moving evidence 대기 | 차량 연결 후 새 schema-v6 주행 evidence를 확보한 뒤 controller output 재현성을 검증 |
+| 실제 H1 replay fidelity | ✅ bounded moving proof 확보 | private real-world evidence에서 새 schema-v6 moving window의 controller replay 일치를 확인. robust H1 acceptance는 별도 prospective gate 진행 중 |
 | 파라미터 후보 평가/추천 | 📐 기준 문서화 | Safety-related performance / Comfort / Tracking + Hard Gate 기반. 실제 comma 자동 적용은 금지 |
 | 실제 차량 쓰기 | ⛔ 없음 | 이 공개 시뮬레이터 코어는 실차 설정/제어값을 쓰지 않음 |
 
@@ -106,20 +106,20 @@ CombinedVehiclePlant          ← 공통 코어
 
 실제 comma의 read-only inventory, 기존 H1 변경 백업/분류, 최신 `carrot-wip` 동기화, 최소 observability overlay 재적용, offroad build/reboot/runtime schema 검증까지 완료했습니다. 공개판에는 장치 식별정보나 개인 경로를 싣지 않고 결과만 일반화해 기록합니다.
 
-다음 실증 게이트는 **차량 연결 상태에서 새 schema-v6 H1 evidence를 수집하고 실제 controller replay fidelity를 검증하는 것**입니다.
+다음 실증 게이트는 단일 bounded PASS를 robust acceptance로 과장하지 않고, **사전 고정된 development A / development B / sealed holdout topology로 controller replay를 반복 검증하는 것**입니다. 방법론은 [`docs/H1_ROBUST_ACCEPTANCE_KO.md`](docs/H1_ROBUST_ACCEPTANCE_KO.md)를 따릅니다.
 
 ```text
-차량 연결 + 정차 상태 확인
+bounded moving controller replay proof 확보
         ↓
-CarParams / fingerprint / plannerd 실제 기동 확인
+robust H1 acceptance contract 사전 고정
         ↓
-carrotH1ReplayTrace + carrotH1ConfigSnapshot 생성 확인
+development A route
         ↓
-짧은 moving route 수집
+development B route
         ↓
-trace/config 연속성 및 provenance 검증
+두 development PASS 후 sealed holdout 1회 검증
         ↓
-controller output replay fidelity 검증
+robust H1 PASS 시에만 별도 H2 evidence qualification 검토
 ```
 
 현재 단계에서는 일반 사용자가 live comma에서 무조건적인 `git pull`을 반복할 이유가 없습니다. upstream이 바뀌면 먼저 simulator/observer compatibility를 확인하고, H1 overlay를 보존한 상태로 업데이트합니다. 세부 현황은 [`docs/PROJECT_STATUS_KO.md`](docs/PROJECT_STATUS_KO.md)에 정리합니다.
@@ -144,7 +144,7 @@ controller output replay fidelity 검증
 
 이를 **Replay Fidelity(재생 충실도)**라고 합니다. H1이 충분하지 않으면 차이가 제어기 때문인지 차량 때문인지 분리하기 어렵습니다.
 
-현재 공개 코어에는 schema-v6 H1 evidence의 구조적 충분성을 검사하는 계층이 구현되어 있습니다. 실제 재현 충실도 판정은 실제 comma evidence로 별도 수행합니다.
+현재 공개 코어에는 schema-v6 H1 evidence의 구조적 충분성을 검사하는 계층이 구현되어 있으며, private real-world evidence에서는 bounded moving replay 일치도 확인됐습니다. 다만 robust H1 acceptance는 사전 역할 배정과 sealed holdout을 포함하는 별도 단계입니다.
 
 파라미터 후보 평가는 [`docs/SCORING_AND_TUNING_KO.md`](docs/SCORING_AND_TUNING_KO.md)의 계약을 따릅니다. Safety-related performance는 TTC/THW/제동여유/차선오차 등, Comfort는 jerk/가감속·조향 진동 등, Tracking은 gap error/상대속도 오차/응답시간·settling 등을 사용합니다. Hard Gate를 위반한 후보는 다른 점수가 좋아도 추천하지 않으며, 추천 결과가 실제 차량 Params를 자동 변경하지 않습니다.
 
@@ -296,7 +296,8 @@ Vehicle Plugin 등록
 - [x] schema-v6 H1 evidence strict parser / structural qualification
 - [x] eGPU/통합 브랜치를 simulator 필수 경로에서 분리
 - [x] 실제 comma read-only inventory / H1 overlay 분류 / 최신화 / offroad 검증
-- [ ] 실제 comma moving H1 evidence 확보 및 controller replay fidelity 검증
+- [x] 실제 comma moving H1 bounded evidence 확보 및 controller replay fidelity proof
+- [ ] prospective development A/B + sealed holdout 기반 robust H1 acceptance
 - [ ] Santa Fe longitudinal Plant 검증 완료
 - [ ] 실제 Carrot/openpilot controller bridge 공개판 정리
 - [ ] 표준 Vehicle Profile / Plugin 포맷 확정

@@ -115,7 +115,7 @@ historical schema-v6의 **54개 필드를 모두 요구**합니다. planner main
 - H2 차량 Plant가 검증되었다는 뜻
 - 자동 파라미터 튜닝 권한
 
-실제 controller output replay 비교는 `H1_READY` 이후 별도 검증 단계입니다.
+실제 controller output replay 비교는 `H1_READY` 이후 별도 검증 단계입니다. Private evidence에서 bounded moving replay proof를 확보했더라도, robust acceptance는 결과 확인 전에 지정된 development/development/sealed-holdout route set으로 별도 수행합니다. 자세한 일반 방법론은 [`H1_ROBUST_ACCEPTANCE_KO.md`](H1_ROBUST_ACCEPTANCE_KO.md)를 참고합니다.
 
 ## 5. `H1_HOLD`의 의미
 
@@ -248,6 +248,6 @@ Gate E 전에는 새 관측 패치를 정상 실주행 검증 완료로 취급�
 
 ## 10. 현재 검증 경계
 
-공개 저장소의 synthetic fixtures는 H1 evidence parser/validator의 계약을 검증하기 위한 것입니다. 실제 싼타페 route에 대한 H1 replay fidelity 검증은 실제 comma의 observability 상태를 확인하고 새 evidence를 확보한 뒤 진행합니다.
+공개 저장소의 synthetic fixtures는 H1 evidence parser/validator 계약을 검증합니다. 실제 route raw evidence와 개별 replay receipt는 private layer에 유지합니다. Private real-world evidence에서는 bounded moving controller replay proof가 확보됐지만, 이는 robust H1 전체 PASS나 실도로 안전성 인증이 아닙니다.
 
-현재 공개 구현 완료 범위는 **evidence 구조/무결성 검증**까지입니다. 실제 controller bridge 실행, 실제 route에서의 output equality, 차량 Plant 식별/검증은 별도 단계로 남아 있습니다.
+현재 다음 검증 경계는 prospective development A/B + sealed holdout 방식의 robust H1 acceptance입니다. Robust H1이 성립하더라도 H2 차량 Plant 식별/튜닝/실차 write는 별도 권한과 검증을 요구합니다.
