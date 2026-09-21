@@ -125,6 +125,16 @@ process.stdout.write(JSON.stringify(context.__result));
   return json.loads(completed.stdout)
 
 
+def test_optimization_state_is_human_readable_without_losing_raw_evidence():
+  expression = """optimizationStatePresentation(
+    'CURRENT_REFERENCE_RETAINED_NO_CHANGE_PROMOTED'
+  )"""
+  assert run_frontend_expression(expression) == {
+    "label": "현 설정 유지",
+    "title": "CURRENT_REFERENCE_RETAINED_NO_CHANGE_PROMOTED · 실차 적용 권한 없음",
+  }
+
+
 def test_twin_scene_model_uses_only_data_backed_objects():
   expression = """twinSceneModel(
     {ego:{pose:{x_m:1,y_m:0.2,heading_rad:0.1}},
