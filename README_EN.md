@@ -3,9 +3,11 @@
 > **A multi-vehicle closed-loop simulator research project for testing Carrot/openpilot-family controllers without repeatedly driving the real vehicle.**  
 > The first software reference vehicle identity is `HYUNDAI_SANTA_FE_2022`.
 
-[한국어](README.md) · [English](README_EN.md) · [Documentation status (KO)](docs/DOCUMENT_STATUS_KO.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Output flow (KO)](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [Synthetic optimization and digital twin (KO)](docs/SYNTHETIC_OPTIMIZATION_PLATFORM_KO.md) · [Documentation status (KO)](docs/DOCUMENT_STATUS_KO.md) · [Current project status (KO)](docs/PROJECT_STATUS_KO.md) · [Output flow (KO)](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md) · [Scoring & tuning contract (KO)](docs/SCORING_AND_TUNING_KO.md) · [Public/private policy (KO)](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md)
 
 > `HYUNDAI_SANTA_FE_2022` is an **openpilot/simulator software reference identity**. It must not be used to infer the registered model year or trim of a private real test vehicle; real vehicle identity is qualified separately in private H0 evidence.
+
+This release adds a public synthetic optimization core and data-backed digital-twin UI. Real vehicle settings, allowed search ranges, route-level scores, and adoption history remain private; only generalized algorithms and synthetic examples are published here.
 
 ## What this project is
 
