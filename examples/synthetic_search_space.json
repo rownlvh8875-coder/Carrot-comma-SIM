@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "synthetic_only": true,
+  "parameters": {
+    "following_gap": {"minimum": 1.2, "maximum": 2.4, "step": 0.2},
+    "stopping_distance": {"minimum": 4.0, "maximum": 8.0, "step": 1.0},
+    "actuator_delay": {"minimum": 0.10, "maximum": 0.30, "step": 0.05}
+  },
+  "authority": {
+    "recommendation_authorized": false,
+    "real_vehicle_write": false
+  }
+}

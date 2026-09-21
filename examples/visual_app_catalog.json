@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "scenario_event_count": 6,
+  "synthetic_only": true,
+  "runs": [
+    {
+      "run_id": "synthetic-baseline",
+      "label": "Synthetic baseline",
+      "rows_path": "examples/visual_run_baseline.jsonl",
+      "rows_sha256": "685c5999ceb964036899b78fa2d74a34122167924376dfcc0a483fe58c321ac0",
+      "evidence_class": "synthetic-example",
+      "authority": {"recommendation_authorized": false, "real_vehicle_write": false}
+    },
+    {
+      "run_id": "synthetic-candidate",
+      "label": "Synthetic candidate",
+      "rows_path": "examples/visual_run_candidate.jsonl",
+      "rows_sha256": "18789244b71a916343a33a8b6adc005903cd088fa8c0621a292b0cb9f6d2656d",
+      "evidence_class": "synthetic-example",
+      "authority": {"recommendation_authorized": false, "real_vehicle_write": false}
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carrot Visual Simulator</title>
+<style>
+:root{--bg:#071019;--panel:#101d29;--line:#26394a;--text:#eaf4ff;--muted:#91a8b9;--blue:#35a7ff;--baseline:#8798a5;--orange:#ff9d3f;--green:#45d19a;--red:#ff667a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 25% 0,#16304a 0,var(--bg) 42%);color:var(--text);font:14px system-ui,"Malgun Gothic",sans-serif}
+header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line);background:#08131dcc;backdrop-filter:blur(10px)}
+.brand h1{font-size:19px;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:12px}.safe{padding:9px 12px;border:1px solid #275844;border-radius:10px;color:#8ef0c7;background:#0d2a21}
+.controls{display:grid;grid-template-columns:2fr 2fr auto auto auto 1fr;gap:10px;padding:14px 20px}.controls select,.controls button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}.controls button{cursor:pointer}.controls button.primary{background:var(--blue);color:#041421;font-weight:800}
+main{display:grid;grid-template-columns:minmax(420px,1fr) 310px;gap:14px;padding:0 20px 20px}.stage,.side,.chart,.events{background:#0c1823e8;border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px #0005}.stage{position:relative;overflow:hidden;min-height:520px}.stage canvas{width:100%;height:520px;display:block}.badge{position:absolute;top:14px;left:14px;background:#071019dd;border:1px solid var(--line);border-radius:9px;padding:8px 10px;color:var(--muted);backdrop-filter:blur(8px)}.sceneMode{position:absolute;left:14px;bottom:14px;padding:8px 10px;border-radius:9px;background:#071019dd;border:1px solid var(--line);color:#86e9ff;font-size:11px;letter-spacing:.06em}.sceneRelations{position:absolute;right:14px;top:14px;width:188px;padding:12px 13px;border:1px solid #335166;border-radius:12px;background:#071019e8;backdrop-filter:blur(10px);box-shadow:0 10px 30px #0006}.sceneRelations h3{margin:0 0 8px;font-size:11px;color:#b8d6e7;letter-spacing:.08em}.sceneRelations div{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid #26394a88}.sceneRelations span{font-size:11px;color:var(--muted)}.sceneRelations b{font-size:11px;font-weight:700;color:var(--text);text-align:right}.sceneRelations .dataMissing{color:#ffd37a}
+.side{padding:15px}.side h2{font-size:14px;color:var(--muted);margin:0 0 12px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{padding:12px;background:#142331;border-radius:12px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:20px;line-height:1.5}.authority{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.authority div{display:flex;justify-content:space-between;padding:7px 0}.off{color:#ff91a0}.unknown{color:#ffd37a}
+.bottom{grid-column:1/-1;display:grid;grid-template-columns:2fr 1fr;gap:14px}.chart,.events{padding:14px;min-height:145px}.chartTrack{height:70px;border-bottom:1px solid var(--line);position:relative;background:linear-gradient(90deg,transparent 9%,#203243 10%,transparent 11%) 0 0/10% 100%}.cursor{position:absolute;top:0;bottom:0;width:2px;background:var(--orange);left:0}.events ul{margin:8px 0;padding-left:18px;color:var(--muted)}input[type=range]{width:100%;accent-color:var(--orange)}
+@media (max-width: 900px){header{height:auto;padding:15px;gap:12px}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}main{grid-template-columns:1fr;padding:0 10px 12px}.stage{min-height:400px}.stage canvas{height:400px}.bottom{grid-template-columns:1fr}}
+</style></head><body>
+<header><div class="brand"><h1>Carrot Visual Simulator</h1><p>오프라인 로컬 시뮬레이터 · 인터넷 연결 없이 저장 결과를 재생합니다</p></div><div class="safe">READ ONLY · 실차 제어 없음</div></header>
+<section class="controls">
+<select id="runSelect" aria-label="기준 실행"><option>실행 선택</option></select>
+<select id="candidateSelect" aria-label="후보 실행"><option value="">후보 없음</option></select>
+<button id="restartButton">처음으로</button><button id="playButton" class="primary">재생</button>
+<select id="playbackRate"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+<input id="timeline" type="range" min="0" max="0" value="0" aria-label="시간축">
+</section>
+<main><section class="stage"><canvas id="roadCanvas" width="960" height="520" role="img" aria-label="디지털 트윈 주행 장면"></canvas><div class="badge" id="sceneStatus">저장 실행을 선택하세요</div><div class="sceneMode">DIGITAL TWIN · DATA BACKED</div><section class="sceneRelations" aria-label="주행 객체 관계"><h3>현재 객체 관계</h3><div><span>선행차</span><b id="sceneLeadRelation">데이터 없음</b></div><div><span>후보 궤적</span><b id="sceneCandidateStatus">선택 안 됨</b></div><div><span>차선</span><b id="sceneLaneStatus" class="dataMissing">데이터 없음</b></div></section></section>
+<aside class="side"><h2>현재 프레임</h2><div class="metrics">
+<div class="metric"><span>속도</span><strong id="speedValue">—</strong></div><div class="metric"><span>목표 속도</span><strong id="targetSpeedValue">—</strong></div>
+<div class="metric"><span>가속도</span><strong id="accelValue">—</strong></div><div class="metric"><span>Jerk</span><strong id="jerkValue">—</strong></div>
+<div class="metric"><span>차간거리</span><strong id="leadDistanceValue">—</strong></div><div class="metric"><span>TTC</span><strong id="ttcValue">—</strong></div>
+<div class="metric"><span>조향</span><strong id="steerValue">—</strong></div><div class="metric"><span>경과시간</span><strong id="elapsedValue">—</strong></div></div>
+<div class="authority"><div><span>오프라인 판정</span><b>CURRENT_REFERENCE_RETAINED_NO_CHANGE_PROMOTED</b></div><div><span>추천 상태</span><b id="recommendationStatus" class="unknown">승인 안 됨</b></div><div><span>실차 쓰기 차단</span><b id="realVehicleWriteStatus" class="off">활성</b></div><div><span>최적화 단계</span><b id="optimizationPhase">미실행</b></div><div><span>최적화 판정</span><b id="optimizationRecommendation" class="unknown">실차 적용 권한 없음</b></div><div><span>Coverage 부족</span><b id="coverageStatus">확인 중</b></div><div><span>Pose</span><b id="poseUnavailable">—</b></div><div><span>선행차</span><b id="leadUnavailable">—</b></div></div></aside>
+<section class="bottom"><div class="chart"><b>시간축 동기화</b><div class="chartTrack"><div id="chartCursor" class="cursor"></div></div></div><div id="eventTimeline" class="events"><b>이벤트</b><ul id="eventList"><li>선택된 이벤트 없음</li></ul></div></section></main>
+<script>
+'use strict';
+const state={catalog:[],frames:[],candidateFrames:[],nextOffset:null,candidateNextOffset:null,frameIndex:0,playing:false,timer:null,rate:1};
+const el=id=>document.getElementById(id);const fmt=(v,d=1)=>v==null?'—':Number(v).toFixed(d);
+function renderUnavailable(field){const ids={pose:'poseUnavailable',lead:'leadUnavailable'};el(ids[field]).textContent='데이터 없음';el(ids[field]).className='unknown'}
+function twinSceneModel(frame,candidate){
+  const pose=frame&&frame.ego&&frame.ego.pose;
+  const candidatePose=candidate&&candidate.ego&&candidate.ego.pose;
+  const candidateY=candidatePose?Number(candidatePose.y_m):NaN;
+  const lead=frame&&frame.lead;
+  const leadDistance=lead?Number(lead.distance_m):NaN;
+  const candidateOffsetPx=Number.isFinite(candidateY)?Math.round(Math.max(-80,Math.min(80,candidateY*4))*10)/10:null;
+  const leadOffsetPx=Number.isFinite(leadDistance)?Math.round(Math.max(0,Math.min(220,leadDistance*3))*10)/10:null;
+  return {
+    poseAvailable:!!pose,
+    lanesAvailable:!!(frame&&frame.lanes),
+    candidateAvailable:!!candidatePose,
+    candidateOffsetPx,
+    leadOffsetPx,
+    actors:lead?[{kind:'lead',id:lead.id??null,distanceM:lead.distance_m,relativeSpeedMps:lead.relative_speed_mps??null}]:[]
+  }
+}
+function roundedRect(ctx,x,y,w,h,r){const q=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+q,y);ctx.lineTo(x+w-q,y);ctx.quadraticCurveTo(x+w,y,x+w,y+q);ctx.lineTo(x+w,y+h-q);ctx.quadraticCurveTo(x+w,y+h,x+w-q,y+h);ctx.lineTo(x+q,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-q);ctx.lineTo(x,y+q);ctx.quadraticCurveTo(x,y,x+q,y);ctx.closePath()}
+function drawTwinVehicle(ctx,x,y,style,label,heading=0,scale=1,alpha=1){
+  ctx.save();ctx.translate(x,y);ctx.rotate(heading);ctx.scale(scale,scale);ctx.globalAlpha=alpha;
+  ctx.fillStyle='#0008';ctx.beginPath();ctx.ellipse(0,6,31,57,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0a0d10';for(const px of [-31,31])for(const py of [-31,31]){roundedRect(ctx,px-4,py-12,8,24,4);ctx.fill()}
+  const gradient=ctx.createLinearGradient(-28,-55,28,55);gradient.addColorStop(0,style.highlight);gradient.addColorStop(.5,style.body);gradient.addColorStop(1,style.shadow);
+  roundedRect(ctx,-28,-58,56,116,19);ctx.fillStyle=gradient;ctx.fill();ctx.strokeStyle=style.outline;ctx.lineWidth=2;ctx.stroke();
+  roundedRect(ctx,-20,-37,40,31,10);ctx.fillStyle='#14374a';ctx.fill();ctx.strokeStyle='#5f879b88';ctx.lineWidth=1;ctx.stroke();
+  roundedRect(ctx,-20,12,40,27,9);ctx.fillStyle='#173344cc';ctx.fill();
+  ctx.fillStyle='#ff5364';roundedRect(ctx,-21,45,13,6,3);ctx.fill();roundedRect(ctx,8,45,13,6,3);ctx.fill();
+  ctx.fillStyle='#e9f1f4';roundedRect(ctx,-12,51,24,5,2);ctx.fill();
+  ctx.fillStyle='#071019dd';roundedRect(ctx,-35,-83,70,20,10);ctx.fill();ctx.fillStyle='#f4fbff';ctx.font='600 11px system-ui';ctx.textAlign='center';ctx.fillText(label,0,-69);
+  ctx.restore()
+}
+function drawRoad(frame){
+  const canvas=el('roadCanvas'),ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+  const candidate=state.candidateFrames[state.frameIndex],model=twinSceneModel(frame,candidate),roadLeft=128,roadRight=w-128,egoX=w/2,egoY=h*.76;
+  ctx.clearRect(0,0,w,h);
+  const ground=ctx.createLinearGradient(0,0,w,h);ground.addColorStop(0,'#0d2623');ground.addColorStop(1,'#071512');ctx.fillStyle=ground;ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='#17242d';roundedRect(ctx,roadLeft,-25,roadRight-roadLeft,h+50,24);ctx.fill();
+  ctx.fillStyle='#22333d';ctx.fillRect(roadLeft+8,0,roadRight-roadLeft-16,h);
+  ctx.fillStyle='#0e1d22';ctx.fillRect(roadLeft,0,12,h);ctx.fillRect(roadRight-12,0,12,h);
+  ctx.strokeStyle='#dce8ef88';ctx.lineWidth=3;ctx.setLineDash([18,18]);
+  for(const x of [roadLeft+(roadRight-roadLeft)/3,roadLeft+2*(roadRight-roadLeft)/3]){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  ctx.setLineDash([]);
+  ctx.strokeStyle='#4e667455';ctx.lineWidth=2;ctx.setLineDash([7,9]);
+  for(const x of [roadLeft+30,roadRight-150]){roundedRect(ctx,x,118,120,160,24);ctx.stroke()}
+  ctx.setLineDash([]);ctx.fillStyle='#8da4b1';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText('객체 데이터 없음',roadLeft+90,204);ctx.fillText('객체 데이터 없음',roadRight-90,204);
+  if(model.candidateAvailable){
+    const cx=egoX+model.candidateOffsetPx;ctx.strokeStyle='#35d4d1';ctx.lineWidth=5;ctx.setLineDash([10,10]);ctx.beginPath();ctx.moveTo(egoX,egoY+66);ctx.bezierCurveTo(egoX,egoY-25,cx,egoY-90,cx,egoY-170);ctx.stroke();ctx.setLineDash([]);
+    drawTwinVehicle(ctx,cx,egoY,{highlight:'#ffd09a',body:'#ff9d3f',shadow:'#b95816',outline:'#ffd7a8'},'후보',candidate.ego.pose.heading_rad||0,.94,.68)
+  }
+  if(model.actors.length){
+    const lead=model.actors[0],leadY=Math.max(92,egoY-model.leadOffsetPx);
+    ctx.strokeStyle='#70dfff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(egoX,egoY-66);ctx.lineTo(egoX,leadY+50);ctx.stroke();
+    const mid=(egoY+leadY)/2;ctx.fillStyle='#071019dd';roundedRect(ctx,egoX-52,mid-14,104,28,14);ctx.fill();ctx.fillStyle='#d9f6ff';ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText(fmt(lead.distanceM)+' m',egoX,mid+4);
+    drawTwinVehicle(ctx,egoX,leadY,{highlight:'#fff2a3',body:'#e1c447',shadow:'#8a741c',outline:'#fff2a3'},'선행차',0,.78,1)
+  }else{renderUnavailable('lead')}
+  drawTwinVehicle(ctx,egoX,egoY,{highlight:'#d4e0e7',body:'#8798a5',shadow:'#46535d',outline:'#d8e5ec'},'기준차',frame.ego&&frame.ego.pose?frame.ego.pose.heading_rad||0:0,1,1);
+  if(!model.poseAvailable)renderUnavailable('pose');
+  el('sceneLeadRelation').textContent=model.actors.length?fmt(model.actors[0].distanceM)+' m · '+fmt(model.actors[0].relativeSpeedMps)+' m/s':'데이터 없음';
+  el('sceneCandidateStatus').textContent=model.candidateAvailable?'궤적 표시':'선택 안 됨';
+  el('sceneLaneStatus').textContent=model.lanesAvailable?'기록 차선':'데이터 없음 · 3차선 틀';
+  el('sceneLaneStatus').className=model.lanesAvailable?'':'dataMissing'
+}
+function renderEvents(events){const list=el('eventList'),values=events&&events.length?events:['선택된 이벤트 없음'];list.replaceChildren(...values.map(value=>{const item=document.createElement('li');item.textContent=String(value);return item}))}
+function updateMetrics(frame){const m=frame.metrics||{};el('speedValue').textContent=fmt(m.speed_mps==null?null:m.speed_mps*3.6)+' km/h';el('targetSpeedValue').textContent=fmt(m.target_speed_mps==null?null:m.target_speed_mps*3.6)+' km/h';el('accelValue').textContent=fmt(m.accel_mps2,2)+' m/s²';el('jerkValue').textContent=fmt(m.jerk_mps3,2);el('leadDistanceValue').textContent=fmt(frame.lead&&frame.lead.distance_m)+' m';el('ttcValue').textContent=fmt(m.ttc_s)+' s';el('steerValue').textContent=fmt(m.steering,2);el('elapsedValue').textContent=fmt(frame.elapsed_s,2)+' s';renderEvents(frame.events)}
+function updateChartCursor(frame){const total=Math.max(1,state.frames.length-1);el('chartCursor').style.left=(100*state.frameIndex/total)+'%';el('timeline').value=state.frameIndex;el('sceneStatus').textContent='Frame '+(state.frameIndex+1)+' · '+fmt(frame.elapsed_s,2)+'s'}
+function renderFrame(frame){if(!frame)return;drawRoad(frame);updateMetrics(frame);updateChartCursor(frame)}
+function seekFrame(index){state.frameIndex=Math.max(0,Math.min(Number(index),state.frames.length-1));renderFrame(state.frames[state.frameIndex]);if(state.nextOffset!==null&&state.frameIndex>state.frames.length-80)loadMoreFrames()}
+async function loadMoreFrames(){if(state.nextOffset===null)return;const offset=state.nextOffset,id=el('runSelect').value;const res=await fetch('/api/runs/'+encodeURIComponent(id)+'/frames?offset='+offset+'&limit=500');const page=await res.json();if(el('candidateSelect').value&&state.candidateNextOffset!==null){const candidateRes=await fetch('/api/runs/'+encodeURIComponent(el('candidateSelect').value)+'/frames?offset='+state.candidateNextOffset+'&limit=500');const candidatePage=await candidateRes.json();if(!compatibleTimeGrid(page.frames,candidatePage.frames)){state.candidateFrames=[];state.candidateNextOffset=null;el('sceneStatus').textContent='TIME_GRID_MISMATCH · 비교 차단'}else{state.candidateFrames.push(...candidatePage.frames);state.candidateNextOffset=candidatePage.next_offset}}state.frames.push(...page.frames);state.nextOffset=page.next_offset;el('timeline').max=Math.max(0,page.total-1)}
+function compatibleTimeGrid(baseline,candidate){if(baseline.length!==candidate.length)return false;return baseline.every((frame,index)=>frame.mono_ns===candidate[index].mono_ns)}
+async function loadCandidate(runId){state.candidateFrames=[];state.candidateNextOffset=null;if(!runId){renderFrame(state.frames[state.frameIndex]);return}const res=await fetch('/api/runs/'+encodeURIComponent(runId)+'/frames?offset=0&limit=500');const page=await res.json();if(!compatibleTimeGrid(state.frames.slice(0,page.frames.length),page.frames)){el('sceneStatus').textContent='TIME_GRID_MISMATCH · 비교 차단';return}state.candidateFrames=page.frames;state.candidateNextOffset=page.next_offset;while(state.candidateNextOffset!==null&&state.candidateFrames.length<state.frames.length){const offset=state.candidateNextOffset,nextRes=await fetch('/api/runs/'+encodeURIComponent(runId)+'/frames?offset='+offset+'&limit=500'),candidatePage=await nextRes.json();if(!compatibleTimeGrid(state.frames.slice(offset,offset+candidatePage.frames.length),candidatePage.frames)){state.candidateFrames=[];state.candidateNextOffset=null;el('sceneStatus').textContent='TIME_GRID_MISMATCH · 비교 차단';return}state.candidateFrames.push(...candidatePage.frames);state.candidateNextOffset=candidatePage.next_offset}renderFrame(state.frames[state.frameIndex])}
+async function loadRun(runId){if(!runId)return;state.playing=false;clearInterval(state.timer);const res=await fetch('/api/runs/'+encodeURIComponent(runId)+'/frames?offset=0&limit=500');if(!res.ok)throw new Error('실행 데이터를 불러오지 못했습니다');const page=await res.json();state.frames=page.frames;state.nextOffset=page.next_offset;state.frameIndex=0;el('timeline').max=Math.max(0,page.total-1);const meta=state.catalog.find(x=>x.run_id===runId);el('recommendationStatus').textContent=meta&&meta.authority.recommendation_authorized?'승인됨':'승인 안 됨';el('realVehicleWriteStatus').textContent=meta&&meta.authority.real_vehicle_write?'허용':'차단';el('coverageStatus').textContent=meta&&meta.evidence_class==='COVERAGE_BLOCKED'?'Coverage 부족':'저장 증거 기준';seekFrame(0)}
+async function loadCatalog(){const res=await fetch('/api/catalog');const data=await res.json();state.catalog=data.runs||[];for(const target of [el('runSelect'),el('candidateSelect')]){const keep=target.firstElementChild;target.replaceChildren(keep);for(const run of state.catalog){const option=document.createElement('option');option.value=run.run_id;option.textContent=run.label;target.appendChild(option)}}}
+async function loadOptimization(){try{const statusRes=await fetch('/api/optimization/status');if(!statusRes.ok)return;const status=await statusRes.json();el('optimizationPhase').textContent=status.phase||'미실행';const reportRes=await fetch('/api/optimization/report');if(reportRes.ok){const report=await reportRes.json();el('optimizationRecommendation').textContent=(report.state||'INSUFFICIENT_EVIDENCE')+' · 실차 적용 권한 없음'}}catch(_error){el('optimizationPhase').textContent='상태 없음'}}
+function tick(){if(!state.playing||!state.frames.length)return;if(state.frameIndex>=state.frames.length-1&&state.nextOffset===null){state.playing=false;el('playButton').textContent='재생';return}seekFrame(state.frameIndex+1)}
+el('runSelect').addEventListener('change',e=>loadRun(e.target.value).catch(showError));el('candidateSelect').addEventListener('change',e=>loadCandidate(e.target.value).catch(showError));el('timeline').addEventListener('input',e=>seekFrame(e.target.value));el('restartButton').addEventListener('click',()=>seekFrame(0));el('playbackRate').addEventListener('change',e=>{state.rate=Number(e.target.value);startTimer()});el('playButton').addEventListener('click',()=>{state.playing=!state.playing;el('playButton').textContent=state.playing?'일시정지':'재생';startTimer()});
+function startTimer(){clearInterval(state.timer);state.timer=setInterval(tick,50/state.rate)}function showError(error){state.playing=false;el('sceneStatus').textContent=error.message;el('sceneStatus').classList.add('off')}
+window.addEventListener('resize',()=>renderFrame(state.frames[state.frameIndex]));loadCatalog().catch(showError);loadOptimization();startTimer();
+</script></body></html>

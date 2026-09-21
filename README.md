@@ -3,9 +3,11 @@
 > **Carrot/openpilot 계열 제어기를 실제 차량 없이 반복 시험하기 위한 범용 폐루프(Closed-loop) 차량 시뮬레이터 연구 프로젝트**  
 > 첫 번째 software Reference Vehicle identity는 `HYUNDAI_SANTA_FE_2022`입니다.
 
-[한국어](README.md) · [English](README_EN.md) · [문서 상태 인덱스](docs/DOCUMENT_STATUS_KO.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md) · [시뮬레이션 결과는 어떻게 나오는가?](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md)
+[한국어](README.md) · [English](README_EN.md) · [합성 최적화·디지털 트윈](docs/SYNTHETIC_OPTIMIZATION_PLATFORM_KO.md) · [문서 상태 인덱스](docs/DOCUMENT_STATUS_KO.md) · [현재 프로젝트 상태](docs/PROJECT_STATUS_KO.md) · [평가·튜닝 기준](docs/SCORING_AND_TUNING_KO.md) · [공개/비공개 정책](docs/PUBLIC_PRIVATE_REPO_POLICY_KO.md) · [시뮬레이션 결과는 어떻게 나오는가?](docs/HOW_SIMULATION_OUTPUT_WORKS_KO.md)
 
 > `HYUNDAI_SANTA_FE_2022`는 openpilot/시뮬레이터에서 사용하는 **software reference identity**입니다. 이 공개 식별자만으로 비공개 실제 시험차의 등록연식·트림을 추정하지 않으며, 실제 차량 identity는 private H0 evidence에서 별도로 검증합니다.
+
+공개 합성 최적화 코어와 데이터 기반 디지털 트윈 UI가 추가되었습니다. 실제 차량 설정, 허용 탐색 범위, 경로별 점수, 설정 채택 이력은 비공개 저장소에만 유지하며 이 공개 릴리스에는 합성 예제만 포함합니다.
 
 ---
 
